@@ -41,7 +41,7 @@ starDelay = 0
 #SHOOTING STAR VARS
 ################
 SS_FADE_SPEED = 10
-SH_DELAY_HIGH = 30
+SH_DELAY_HIGH = 8
 SH_DELAY_LOW = SH_DELAY_HIGH // 2
 
 shStarTrail = {}
@@ -71,7 +71,7 @@ def starLoop():
                 hasAdjacent = checkForAdjacent(nextStar)
                 if nextStar not in stars.keys() and (time.time_ns() - prevStarTime) >= starDelay and not hasAdjacent:
                     prevStarTime = time.time_ns()
-                    starDelay = (10**9) * random.randint(0, 1)
+                    starDelay = (10**9) * random.random() / 2
 
                     # [starState, dimLevel, dimDelay, flickerDir]
                         # starState: 0 -> inactive, 1 -> brightening, 2 -> peaking, -1 -> dimming
@@ -86,7 +86,7 @@ def starLoop():
         if stars[star][0] == 1: #brightenining
             if stars[star][1][0] == MAX_BRIGHTNESS:
                 stars[star][0] = 2
-                dimDelay = (10**9) * random.randint(3, 6)
+                dimDelay = (10**9) * (2.0 * (random.random()) + 1)
                 stars[star][2] = time.time_ns() + dimDelay #assign dim delay
             else:
                 whiteVal = min(stars[star][1][0] + SPEED, MAX_BRIGHTNESS) #brighten star

@@ -15,7 +15,6 @@ class MatrixSim:
         pygame.init()
         self.display = pygame.display
 
-
         self.matrix_width = width
         self.matrix_height = height
 
@@ -54,6 +53,11 @@ class MatrixSim:
         self.display.flip()
 
     def set_rgb(self, x, y, r, g, b):
+        if (x < 0 or y < 0):
+            print('invalid')
+            print(x)
+            print(y)
+            print()
         color = pygame.Color(r, g, b)
         dx = x * (self.PIXEL_SIZE + self.PIXEL_SPACING) + self.X_OFFSET
         dy = y * (self.PIXEL_SIZE + self.PIXEL_SPACING) + self.Y_OFFSET
