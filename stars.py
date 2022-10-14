@@ -25,12 +25,12 @@ starDelay = 0
 ################
 #SHOOTING STAR VARS
 ################
-SS_FADE_SPEED = 1
+SS_FADE_SPEED = 10
 
 shStarTrail = {}
 shStarData = {}
 prevShStarTime = time.time_ns()
-shStarDelay = (10**9) * 5.0
+shStarDelay = (10**9) * 2.0
 shStarColor = (0, 0, 255)
 ######################################
 
@@ -52,7 +52,7 @@ def starLoop():
                 hasAdjacent = checkForAdjacent(nextStar)
                 if nextStar not in stars.keys() and (time.time_ns() - prevStarTime) >= starDelay and not hasAdjacent:
                     prevStarTime = time.time_ns()
-                    delay = (10**9) * random.randint(0, 1)
+                    starDelay = (10**9) * random.randint(0, 1)
 
                     # [starState, dimLevel, dimDelay, flickerDir]
                         # starState: 0 -> inactive, 1 -> brightening, 2 -> peaking, -1 -> dimming
@@ -107,12 +107,12 @@ def drawStars():
 def shStarLoop():
     global prevShStarTime, shStarDelay, shStarData, shStarTrail, shStarColor
 
-    if (time.time_ns() - prevShStarTime) >= shStarDelay:
+    if len(shStarTrail) == 0 and (time.time_ns() - prevShStarTime) >= shStarDelay:
         edge = random.randint(0, 4) #top, right, bot, left
         xStart = yStart = -1
         slope = dx = 0
 
-        if edge == 0: #right edge
+        if edge == 0:
             xStart = random.randint((WIDTH-1)//2, WIDTH-1)
             yStart = 0
             slope = 1
@@ -125,12 +125,12 @@ def shStarLoop():
         elif edge == 2:
             xStart = random.randint(0, (WIDTH-1)//2)
             yStart = HEIGHT - 1
-            slope = 1
-            dx = -1
+            slope = -1
+            dx = 1
         elif edge == 3:
             xStart = 0
             yStart = random.randint(0, (HEIGHT-1)//2)
-            slope = -1
+            slope = 1 
             dx = 1
 
         shStarData['head'] = (xStart, yStart)
@@ -139,7 +139,8 @@ def shStarLoop():
 
         shStarTrail[shStarData['head']] = shStarColor
 
-        shStarDelay = (10**9) * random.randint(5, 10)
+        #shStarDelay = (10**9) * random.randint(8, 10)
+        shStarDelay = (10**9) * random.randint(1, 3)
 
     #compute shooting star trail
     if len(shStarTrail) > 0:
@@ -150,14 +151,18 @@ def shStarLoop():
             if tColor == (0, 0, 0):
                 shStarTrail.pop(t)
             else:
-                shStarTrail[t] = (0, 0, tColor[2] - SS_FADE_SPEED)
+                shStarTrail[t] = (0, 0, max(0, tColor[2] - SS_FADE_SPEED))
 
         head = shStarData['head']
         dx = shStarData['dx']
         slope = shStarData['slope']
-        if (head[0] >= 0) and (head[0] <= WIDTH-1) and (head[1] >= 0) and (head[1] <= HEIGHT-1):
-            shStarData['head'] = (head[0] + dx, head[1] + (slope * dx))
-            shStarTrail[shStarData['head']] = shStarColor
+        newHead = (head[0] + dx, head[1] + slope)
+        if (newHead[0] >= 0) and (newHead[0] < WIDTH) and (newHead[1] >= 0) and (newHead[1] < HEIGHT): #head trailed off screen
+            shStarData['head'] = newHead
+            shStarTrail[newHead] = shStarColor
+    else:
+        shStarData = {}
+        shStarTrail = {}
 
 
 
