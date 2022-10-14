@@ -21,7 +21,7 @@ def setup():
     return
 
 
-def loop():
+def starLoop():
     global starCount, stars, prevStarTime, prevStarCount, delay
 
     #SELECT RANDOM STAR
@@ -37,46 +37,44 @@ def loop():
 
                     # [starState, dimLevel, dimDelay, flickerDir]
                         # starState: 0 -> inactive, 1 -> brightening, 2 -> peaking, -1 -> dimming
-                        # dimLevel: 0 -> 255 (white value)
+                        # color: (0 -> 255, 0 -> 255, 0 -> 255) (color value)
                         # dimDelay: float of a time at which to begin the dimming process
                         # flickerDir: direction of flicker, either -1 or 1
-                    stars[nextStar] = [1, 0, 0, -1] 
+                    stars[nextStar] = [1, (0, 0, 0), 0, -1] 
                     starCount += 1
 
     #INCREMENT STAR BRIGHTNESS ACCORDING TO DIRECTION
     for star in stars.keys():
         if stars[star][0] == 1: #brightenining
-            if stars[star][1] == MAX_BRIGHTNESS:
+            if stars[star][1][0] == MAX_BRIGHTNESS:
                 stars[star][0] = 2
                 dimDelay = (10**9) * random.randint(3, 6)
                 stars[star][2] = time.time_ns() + dimDelay #assign dim delay
             else:
-                stars[star][1] = min(stars[star][1] + SPEED, MAX_BRIGHTNESS) #brighten star
+                whiteVal = min(stars[star][1][0] + SPEED, MAX_BRIGHTNESS) #brighten star
+                stars[star][1] = (whiteVal, whiteVal, whiteVal)
         elif stars[star][0] == -1: #dimming
-            if stars[star][1] == 0:
+            if stars[star][1][0] == 0:
                 stars.pop(star) #remove star from active dict
                 starCount -= 1
             else:
-                stars[star][1] = max(stars[star][1] - SPEED, 0) #dim star
+                whiteVal = max(stars[star][1][0] - SPEED, 0) #dim star
+                stars[star][1] = (whiteVal, whiteVal, whiteVal)
         elif stars[star][0] == 2: #shining (static)
             if time.time_ns() > stars[star][2]: #begin dimming
                 stars[star][2] = 0
                 stars[star][0] = -1
             else: #flicker
                 #flickerVal = random.randint(0, MAX_FLICKER)
-                flickerVal = random.randint(0, MAX_FLICKER)
+                flickerVal = 0
                 flickerDir = stars[star][3]
+                flickerDir = 0 #PREVENT FLICKER
                 if flickerDir == 1:
                     stars[star][1] = min(MAX_BRIGHTNESS, stars[star][1] + flickerVal)
                     stars[star][3] = -1
                 if flickerDir == -1:
                     stars[star][1] = max(0, stars[star][1] - flickerVal)
                     stars[star][3] = 1
-                
-
-
-
-
             
     updateMatrix()
 
@@ -100,8 +98,8 @@ def checkForAdjacent(nextStar):
 
 def updateMatrix():
     for star in stars.keys():
-        starVal = int(stars[star][1])
-        matrix.set_rgb(star[0], star[1], starVal, starVal, starVal)
+        starColor = stars[star][1]
+        matrix.set_rgb(star[0], star[1], starColor[0], starColor[1], starColor[2])
 
     matrix.flip()
 
@@ -111,4 +109,4 @@ def updateMatrix():
 
 setup()
 while True:
-    loop()
+    starLoop()
