@@ -1,10 +1,10 @@
-import hub75, time, random
-
-SIM = True
+import time, random
 
 ################
 #MATRIX VARS
 ################
+SIM = True
+
 WIDTH = 32
 HEIGHT = 32
 
@@ -13,6 +13,7 @@ if SIM:
     from matsim import MatrixSim
     matrix = MatrixSim(WIDTH, HEIGHT)
 else:
+    import hub75
     matrix = hub75.Hub75(WIDTH, HEIGHT)
 
 ################
@@ -81,7 +82,7 @@ def starLoop():
                     starCount += 1
 
     #INCREMENT STAR BRIGHTNESS ACCORDING TO DIRECTION
-    for star in stars.keys():
+    for star in list(stars.keys()): #added list for python3.7 compat
         if stars[star][0] == 1: #brightenining
             if stars[star][1][0] == MAX_BRIGHTNESS:
                 stars[star][0] = 2
@@ -164,7 +165,7 @@ def shStarLoop():
     if len(shStarTrail) > 0:
         drawShStars()
 
-        for t in shStarTrail.keys():
+        for t in list(shStarTrail.keys()):
             tColor = shStarTrail[t]
             if tColor == (0, 0, 0):
                 shStarTrail.pop(t)
@@ -223,3 +224,10 @@ setup()
 while True:
     starLoop()
     shStarLoop()
+
+    if SIM:
+        #time.sleep(10 / 1000.0) #delay to better simulate screen fps
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
