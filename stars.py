@@ -1,12 +1,19 @@
 import hub75, time, random
 
+SIM = True
+
 ################
 #MATRIX VARS
 ################
 WIDTH = 32
 HEIGHT = 32
 
-matrix = hub75.Hub75(WIDTH, HEIGHT)
+if SIM:
+    import pygame
+    from matsim import MatrixSim
+    matrix = MatrixSim(WIDTH, HEIGHT)
+else:
+    matrix = hub75.Hub75(WIDTH, HEIGHT)
 
 ################
 #COLORS
