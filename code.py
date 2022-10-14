@@ -23,7 +23,7 @@ def shimmeringStars():
             temp.append([0,0])
         stars.append(temp)
 
-    nextStar = (random.randint(WIDTH), random.randint(HEIGHT))
+    nextStar = (random.randint(0, WIDTH-1), random.randint(0, HEIGHT-1))
     if stars[nextStar[1]][nextStar[0]] == 0 and starCount < MAX_STARS:
         stars[nextStar[1]][nextStar[0]] = 1
         starCount += 1
