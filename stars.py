@@ -5,9 +5,15 @@ import hub75, time, random
 ################
 WIDTH = 32
 HEIGHT = 32
-SPEED = 1
 
 matrix = hub75.Hub75(WIDTH, HEIGHT)
+
+################
+#COLORS
+################
+WHITE = (255, 255, 255)
+LIGHT_BLUE = (204, 224, 255)
+LIGHT_PURPLE = (201, 170, 242)
 
 ################
 #STAR VARS
@@ -16,6 +22,7 @@ MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
 MAX_STARS = 500
+SPEED = 1
 
 starCount = 0
 stars = {}
@@ -26,12 +33,16 @@ starDelay = 0
 #SHOOTING STAR VARS
 ################
 SS_FADE_SPEED = 10
+SH_DELAY_HIGH = 30
+SH_DELAY_LOW = SH_DELAY_HIGH // 2
 
 shStarTrail = {}
 shStarData = {}
 prevShStarTime = time.time_ns()
-shStarDelay = (10**9) * 2.0
-shStarColor = (0, 0, 255)
+shStarDelay = (10**9) * random.randint(SH_DELAY_LOW, SH_DELAY_HIGH)
+
+shStarColor = LIGHT_BLUE
+
 ######################################
 
 def setup():
@@ -139,8 +150,8 @@ def shStarLoop():
 
         shStarTrail[shStarData['head']] = shStarColor
 
-        #shStarDelay = (10**9) * random.randint(8, 10)
-        shStarDelay = (10**9) * random.randint(1, 3)
+        prevShStarTime = time.time_ns()
+        shStarDelay = (10**9) * random.randint(SH_DELAY_LOW, SH_DELAY_HIGH)
 
     #compute shooting star trail
     if len(shStarTrail) > 0:
@@ -151,7 +162,7 @@ def shStarLoop():
             if tColor == (0, 0, 0):
                 shStarTrail.pop(t)
             else:
-                shStarTrail[t] = (0, 0, max(0, tColor[2] - SS_FADE_SPEED))
+                shStarTrail[t] = (max(0, tColor[0] - SS_FADE_SPEED), max(0, tColor[1] - SS_FADE_SPEED), max(0, tColor[2] - SS_FADE_SPEED))
 
         head = shStarData['head']
         dx = shStarData['dx']
