@@ -226,7 +226,7 @@ while True:
     shStarLoop()
 
     if SIM:
-        #time.sleep(10 / 1000.0) #delay to better simulate screen fps
+        time.sleep(5 / 1000.0) #delay to better simulate screen fps
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
