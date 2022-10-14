@@ -1,37 +1,56 @@
 import hub75, time, random
 
+################
+#MATRIX VARS
+################
 WIDTH = 32
 HEIGHT = 32
+SPEED = 1
+
+matrix = hub75.Hub75(WIDTH, HEIGHT)
+
+################
+#STAR VARS
+################
 MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
 MAX_STARS = 500
-SPEED = 1
-
-matrix = hub75.Hub75(WIDTH, HEIGHT)
-matrix.start()
 
 starCount = 0
 stars = {}
-
 prevStarTime = 0
-delay = -1
+starDelay = 0
+
+################
+#SHOOTING STAR VARS
+################
+SS_FADE_SPEED = 1
+
+shStarTrail = {}
+shStarData = {}
+prevShStarTime = time.time_ns()
+shStarDelay = (10**9) * 5.0
+shStarColor = (0, 0, 255)
+######################################
 
 def setup():
-    return
+    global prevShStarTime
+
+    matrix.start()
 
 
 def starLoop():
-    global starCount, stars, prevStarTime, prevStarCount, delay
+    global starCount, stars, prevStarTime, prevStarCount, starDelay
 
     #SELECT RANDOM STAR
     if starCount < MAX_STARS:
         prevStarCount = starCount
-        if (time.time_ns() - prevStarTime) >= delay:
+        if (time.time_ns() - prevStarTime) >= starDelay:
             while starCount == prevStarCount: #while new star not yet added
                 nextStar = (random.randint(0, WIDTH-1), random.randint(0, HEIGHT-1))
                 hasAdjacent = checkForAdjacent(nextStar)
-                if nextStar not in stars.keys() and (time.time_ns() - prevStarTime) >= delay and not hasAdjacent:
+                if nextStar not in stars.keys() and (time.time_ns() - prevStarTime) >= starDelay and not hasAdjacent:
                     prevStarTime = time.time_ns()
                     delay = (10**9) * random.randint(0, 1)
 
@@ -75,8 +94,84 @@ def starLoop():
                 if flickerDir == -1:
                     stars[star][1] = max(0, stars[star][1] - flickerVal)
                     stars[star][3] = 1
-            
-    updateMatrix()
+
+    drawStars()
+
+def drawStars():
+    for star in stars.keys():
+        starColor = stars[star][1]
+        matrix.set_rgb(star[0], star[1], starColor[0], starColor[1], starColor[2])
+
+    matrix.flip()
+
+def shStarLoop():
+    global prevShStarTime, shStarDelay, shStarData, shStarTrail, shStarColor
+
+    if (time.time_ns() - prevShStarTime) >= shStarDelay:
+        edge = random.randint(0, 4) #top, right, bot, left
+        xStart = yStart = -1
+        slope = dx = 0
+
+        if edge == 0: #right edge
+            xStart = random.randint((WIDTH-1)//2, WIDTH-1)
+            yStart = 0
+            slope = 1
+            dx = -1
+        elif edge == 1:
+            xStart = WIDTH - 1
+            yStart = random.randint((HEIGHT-1)//2, HEIGHT-1)
+            slope = -1
+            dx = -1
+        elif edge == 2:
+            xStart = random.randint(0, (WIDTH-1)//2)
+            yStart = HEIGHT - 1
+            slope = 1
+            dx = -1
+        elif edge == 3:
+            xStart = 0
+            yStart = random.randint(0, (HEIGHT-1)//2)
+            slope = -1
+            dx = 1
+
+        shStarData['head'] = (xStart, yStart)
+        shStarData['slope'] = slope
+        shStarData['dx'] = dx
+
+        shStarTrail[shStarData['head']] = shStarColor
+
+        shStarDelay = (10**9) * random.randint(5, 10)
+
+    #compute shooting star trail
+    if len(shStarTrail) > 0:
+        drawShStars()
+
+        for t in shStarTrail.keys():
+            tColor = shStarTrail[t]
+            if tColor == (0, 0, 0):
+                shStarTrail.pop(t)
+            else:
+                shStarTrail[t] = (0, 0, tColor[2] - SS_FADE_SPEED)
+
+        head = shStarData['head']
+        dx = shStarData['dx']
+        slope = shStarData['slope']
+        if (head[0] >= 0) and (head[0] <= WIDTH-1) and (head[1] >= 0) and (head[1] <= HEIGHT-1):
+            shStarData['head'] = (head[0] + dx, head[1] + (slope * dx))
+            shStarTrail[shStarData['head']] = shStarColor
+
+
+
+
+def drawShStars():
+    for sh in shStarTrail.keys():
+        starColor = shStarTrail[sh]
+        matrix.set_rgb(sh[0], sh[1], starColor[0], starColor[1], starColor[2])
+
+    matrix.flip()
+        
+
+
+
 
 def checkForAdjacent(nextStar):
     global stars
@@ -96,12 +191,6 @@ def checkForAdjacent(nextStar):
 
     return False
 
-def updateMatrix():
-    for star in stars.keys():
-        starColor = stars[star][1]
-        matrix.set_rgb(star[0], star[1], starColor[0], starColor[1], starColor[2])
-
-    matrix.flip()
 
 ##############
 # MAIN LOOP
@@ -110,3 +199,4 @@ def updateMatrix():
 setup()
 while True:
     starLoop()
+    shStarLoop()
