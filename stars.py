@@ -30,7 +30,7 @@ MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
 MAX_STARS = 500
-SPEED = 1
+SPEED = 10
 
 starCount = 0
 stars = {}
@@ -60,9 +60,10 @@ def setup():
 
 
 def starLoop():
-    global starCount, stars, prevStarTime, prevStarCount, starDelay
+    global starCount, stars, prevStarTime, starDelay
 
     #SELECT RANDOM STAR
+    #addStar():
     if starCount < MAX_STARS:
         prevStarCount = starCount
         if (time.time_ns() - prevStarTime) >= starDelay:
@@ -71,7 +72,7 @@ def starLoop():
                 hasAdjacent = checkForAdjacent(nextStar)
                 if nextStar not in stars.keys() and (time.time_ns() - prevStarTime) >= starDelay and not hasAdjacent:
                     prevStarTime = time.time_ns()
-                    starDelay = (10**9) * random.random() / 2
+                    starDelay = (10**9) * random.random() / 5
 
                     # [starState, dimLevel, dimDelay, flickerDir]
                         # starState: 0 -> inactive, 1 -> brightening, 2 -> peaking, -1 -> dimming
@@ -86,7 +87,7 @@ def starLoop():
         if stars[star][0] == 1: #brightenining
             if stars[star][1][0] == MAX_BRIGHTNESS:
                 stars[star][0] = 2
-                dimDelay = (10**9) * (2.0 * (random.random()) + 1)
+                dimDelay = (10**9) * ((2 * random.random()) + 1.0)
                 stars[star][2] = time.time_ns() + dimDelay #assign dim delay
             else:
                 whiteVal = min(stars[star][1][0] + SPEED, MAX_BRIGHTNESS) #brighten star
@@ -115,6 +116,10 @@ def starLoop():
                     stars[star][3] = 1
 
     drawStars()
+
+def addStar():
+    pass
+
 
 def drawStars():
     for star in stars.keys():
@@ -183,17 +188,16 @@ def shStarLoop():
         shStarData = {}
         shStarTrail = {}
 
-
-
-
 def drawShStars():
     for sh in shStarTrail.keys():
         starColor = shStarTrail[sh]
         matrix.set_rgb(sh[0], sh[1], starColor[0], starColor[1], starColor[2])
 
     matrix.flip()
-        
 
+
+def constellationLoop():
+    pass
 
 
 
