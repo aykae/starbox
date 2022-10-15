@@ -38,6 +38,10 @@ stars = {}
 prevStarTime = 0
 starDelay = 0
 
+haveStarsPeaked = False
+haveStarsDimmed = False
+showNewStars = True
+
 ################
 #SHOOTING STAR VARS
 ################
@@ -52,13 +56,17 @@ shStarDelay = (10**9) * random.randint(SH_DELAY_LOW, SH_DELAY_HIGH)
 
 shStarColor = LIGHT_BLUE
 
-showNewStars = True
 
 ######################################
 
 def setup():
+    global stars, starsBuffer, showNewStars
     matrix.start()
+
     genStars()
+    stars = starsBuffer
+    starsBuffer = {}
+    showNewStars = False
 
 
 def starLoop():
@@ -138,7 +146,7 @@ def genStars():
 
             fadeFactor = (targetColor[0] + targetColor[1] + targetColor[2]) / (255 * 3)
             starsBuffer[nextStar] = {
-                "starState": 1, #0 -> inactive, 1 -> brightening, 2 -> peaking, -1 -> dimming
+                "state": 1, #0 -> inactive, 1 -> brightening, 2 -> peaking, -1 -> dimming
                 "currColor": [0, 0, 0], # rgb 
                 "targetColor": targetColor, #rgb
                 "dimDelay": 0, # int, nanoseconds
@@ -148,28 +156,51 @@ def genStars():
             starCount += 1
 
 def newStarLoop():
-    global starCount, stars, starsBuffer, showNewStars
+    global starCount, stars, starsBuffer, showNewStars, haveStarsPeaked, haveStarsDimmed
 
-    if showNewStars:
+    if haveStarsPeaked and haveStarsDimmed:
         stars = starsBuffer
         starsBuffer = {}
-        showNewStars = False
-
         genStars()
+
 
     if SIM:
         keys = list(stars.keys())
     else:
         keys = stars.keys()
 
-    for star in keys:
-        #find better way to do this vvv 
-        if stars[star]["currColor"][0] < stars[star]["targetColor"][0]:
-            stars[star]["currColor"][0] += SPEED
-        if stars[star]["currColor"][1] < stars[star]["targetColor"][1]:
-            stars[star]["currColor"][1] += SPEED
-        if stars[star]["currColor"][2] < stars[star]["targetColor"][2]:
-            stars[star]["currColor"][2] += SPEED
+    if not haveStarsPeaked:
+        haveStarsPeaked = True
+        for star in keys:
+            #find better way to do this vvv 
+            if stars[star]["state"] == 1:
+                haveStarsPeaked = False
+
+                if stars[star]["currColor"][0] < stars[star]["targetColor"][0]:
+                    stars[star]["currColor"][0] += SPEED
+                if stars[star]["currColor"][1] < stars[star]["targetColor"][1]:
+                    stars[star]["currColor"][1] += SPEED
+                if stars[star]["currColor"][2] < stars[star]["targetColor"][2]:
+                    stars[star]["currColor"][2] += SPEED
+
+                if sum(stars[star]["currColor"]) == sum(stars[star]["targetColor"]):
+                    stars[star]["state"] = 2
+    elif not haveStarsDimmed:
+        haveStarsDimmed = True
+        for star in keys:
+            if stars[star]["state"] == 2:
+                haveStarsDimmed = False
+
+                if stars[star]["currColor"][0] > 0:
+                    stars[star]["currColor"][0] -= SPEED
+                if stars[star]["currColor"][1] > 0:
+                    stars[star]["currColor"][1] -= SPEED
+                if stars[star]["currColor"][2] > 0:
+                    stars[star]["currColor"][2] -= SPEED
+
+                if sum(stars[star]["currColor"] == 0):
+                    stars[star]["state"] = 0
+
 
     drawStars()
 
