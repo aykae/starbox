@@ -29,10 +29,11 @@ LIGHT_PURPLE = (201, 170, 242)
 MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
-MAX_STARS = 500
+MAX_STARS = 50
 SPEED = 5
 
 starCount = 0
+starsBuffer = {}
 stars = {}
 prevStarTime = 0
 starDelay = 0
@@ -51,12 +52,13 @@ shStarDelay = (10**9) * random.randint(SH_DELAY_LOW, SH_DELAY_HIGH)
 
 shStarColor = LIGHT_BLUE
 
+showNewStars = True
+
 ######################################
 
 def setup():
-    global prevShStarTime
-
     matrix.start()
+    genStars()
 
 
 def starLoop():
@@ -123,12 +125,57 @@ def starLoop():
 
     drawStars()
 
-def addStar():
-    pass
+
+def genStars():
+    global starCount, starsBuffer, stars
+
+    while starCount < MAX_STARS:
+        nextStar = (random.randint(0, WIDTH - 1), random.randint(0, HEIGHT - 1))
+        hasAdjacent = checkForAdjacent(nextStar)
+        if nextStar not in starsBuffer.keys() and not hasAdjacent:
+            randBrightness = random.randint(0, 255)
+            targetColor = (randBrightness, randBrightness, randBrightness)
+
+            fadeFactor = (targetColor[0] + targetColor[1] + targetColor[2]) / (255 * 3)
+            starsBuffer[nextStar] = {
+                "starState": 1, #0 -> inactive, 1 -> brightening, 2 -> peaking, -1 -> dimming
+                "currColor": [0, 0, 0], # rgb 
+                "targetColor": targetColor, #rgb
+                "dimDelay": 0, # int, nanoseconds
+                "flickerDir": 0, # -1 or 1; direction of flicker
+            }
+
+            starCount += 1
+
+def newStarLoop():
+    global starCount, stars, starsBuffer, showNewStars
+
+    if showNewStars:
+        stars = starsBuffer
+        starsBuffer = {}
+        showNewStars = False
+
+        genStars()
+
+    if SIM:
+        keys = list(stars.keys())
+    else:
+        keys = stars.keys()
+
+    for star in keys:
+        #find better way to do this vvv 
+        if stars[star]["currColor"][0] < stars[star]["targetColor"][0]:
+            stars[star]["currColor"][0] += SPEED
+        if stars[star]["currColor"][1] < stars[star]["targetColor"][1]:
+            stars[star]["currColor"][1] += SPEED
+        if stars[star]["currColor"][2] < stars[star]["targetColor"][2]:
+            stars[star]["currColor"][2] += SPEED
+
+    drawStars()
 
 def drawStars():
     for star in stars.keys():
-        starColor = stars[star][1]
+        starColor = stars[star]["currColor"]
         matrix.set_rgb(star[0], star[1], starColor[0], starColor[1], starColor[2])
 
     matrix.flip()
@@ -236,8 +283,8 @@ def checkForAdjacent(nextStar):
 
 setup()
 while True:
-    starLoop()
-    shStarLoop()
+    newStarLoop()
+    #shStarLoop()
 
     if SIM:
         time.sleep(5 / 1000.0) #delay to better simulate screen fps
