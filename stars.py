@@ -3,7 +3,7 @@ import time, random
 ################
 #MATRIX VARS
 ################
-SIM = True
+SIM = False
 
 WIDTH = 32
 HEIGHT = 32
@@ -30,7 +30,7 @@ MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
 MAX_STARS = 500
-SPEED = 10
+SPEED = 5
 
 starCount = 0
 stars = {}
@@ -72,7 +72,8 @@ def starLoop():
                 hasAdjacent = checkForAdjacent(nextStar)
                 if nextStar not in stars.keys() and (time.time_ns() - prevStarTime) >= starDelay and not hasAdjacent:
                     prevStarTime = time.time_ns()
-                    starDelay = (10**9) * random.random() / 5
+                    #starDelay = (10**9) * random.random() / 5
+                    starDelay = (10**9) * 0.001
 
                     # [starState, dimLevel, dimDelay, flickerDir]
                         # starState: 0 -> inactive, 1 -> brightening, 2 -> peaking, -1 -> dimming
@@ -83,7 +84,12 @@ def starLoop():
                     starCount += 1
 
     #INCREMENT STAR BRIGHTNESS ACCORDING TO DIRECTION
-    for star in list(stars.keys()): #added list for python3.7 compat
+    if SIM:
+        keys = list(stars.keys())
+    else:
+        keys = stars.keys()
+
+    for star in keys: #added list for python3.7 compat
         if stars[star][0] == 1: #brightenining
             if stars[star][1][0] == MAX_BRIGHTNESS:
                 stars[star][0] = 2
@@ -119,7 +125,6 @@ def starLoop():
 
 def addStar():
     pass
-
 
 def drawStars():
     for star in stars.keys():
@@ -170,7 +175,12 @@ def shStarLoop():
     if len(shStarTrail) > 0:
         drawShStars()
 
-        for t in list(shStarTrail.keys()):
+        if SIM:
+            keys = list(shStarTrail.keys())
+        else:
+            keys = shStarTrail.keys()
+
+        for t in keys:
             tColor = shStarTrail[t]
             if tColor == (0, 0, 0):
                 shStarTrail.pop(t)
