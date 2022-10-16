@@ -29,8 +29,8 @@ LIGHT_PURPLE = (201, 170, 242)
 MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
-MAX_STARS = 50
-SPEED = 5
+MAX_STARS = 30
+SPEED = 1
 
 starCount = 0
 starsBuffer = {}
@@ -155,14 +155,22 @@ def genStars():
 
             starCount += 1
 
+
+def clearStars():
+    global starCount, starsBuffer, stars, haveStarsPeaked, haveStarsDimmed
+
+    starCount = 0
+    haveStarsPeaked = False
+    haveStarsDimmed = False
+
 def newStarLoop():
     global starCount, stars, starsBuffer, showNewStars, haveStarsPeaked, haveStarsDimmed
 
-    if haveStarsPeaked and haveStarsDimmed:
-        stars = starsBuffer
-        starsBuffer = {}
-        genStars()
-
+    # if haveStarsPeaked and haveStarsDimmed:
+    #     print("regen")
+    #     stars = starsBuffer
+    #     starsBuffer = {}
+    #     genStars()
 
     if SIM:
         keys = list(stars.keys())
@@ -183,7 +191,7 @@ def newStarLoop():
                 if stars[star]["currColor"][2] < stars[star]["targetColor"][2]:
                     stars[star]["currColor"][2] += SPEED
 
-                if sum(stars[star]["currColor"]) == sum(stars[star]["targetColor"]):
+                if sum(stars[star]["currColor"]) >= sum(stars[star]["targetColor"]):
                     stars[star]["state"] = 2
     elif not haveStarsDimmed:
         haveStarsDimmed = True
@@ -198,8 +206,15 @@ def newStarLoop():
                 if stars[star]["currColor"][2] > 0:
                     stars[star]["currColor"][2] -= SPEED
 
-                if sum(stars[star]["currColor"] == 0):
+                if sum(stars[star]["currColor"]) <= 0:
                     stars[star]["state"] = 0
+    else:
+        clearStars()
+        genStars()
+        stars = starsBuffer
+        starsBuffer = {}
+
+        time.sleep(1500 / 1000.0)
 
 
     drawStars()
@@ -315,6 +330,7 @@ def checkForAdjacent(nextStar):
 setup()
 while True:
     newStarLoop()
+    time.sleep(10 / 1000.0)
     #shStarLoop()
 
     if SIM:
