@@ -1,4 +1,4 @@
-import time, random
+import time, random, math
 
 ################
 #MATRIX VARS
@@ -29,7 +29,7 @@ LIGHT_PURPLE = (201, 170, 242)
 MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
-MAX_STARS = 30
+MAX_STARS = 50
 SPEED = 1
 
 starCount = 0
@@ -37,6 +37,7 @@ starsBuffer = {}
 stars = {}
 prevStarTime = 0
 starDelay = 0
+starsLevel = 0
 
 dx = 2
 dy = -1
@@ -149,7 +150,7 @@ def genStars():
         nextStar = (random.randint(0, WIDTH - 1), random.randint(0, HEIGHT - 1))
         hasAdjacent = checkForAdjacent(nextStar)
         if nextStar not in starsBuffer.keys() and not hasAdjacent:
-            randBrightness = random.randint(0, 100)
+            randBrightness = random.randint(0, 255)
             targetColor = (randBrightness, randBrightness, randBrightness)
 
             fadeFactor = (targetColor[0] + targetColor[1] + targetColor[2]) / (255 * 3)
@@ -157,6 +158,7 @@ def genStars():
                 "state": 1, #0 -> inactive, 1 -> brightening, 2 -> peaking, -1 -> dimming
                 "currColor": [0, 0, 0], # rgb 
                 "targetColor": targetColor, #rgb
+                "fadeFactor": fadeFactor, #float for incrementing stars proportionally
                 "dimDelay": 0, # int, nanoseconds
                 "flickerDir": 0, # -1 or 1; direction of flicker
             }
@@ -165,9 +167,10 @@ def genStars():
 
 
 def clearStars():
-    global starCount, starsBuffer, stars, haveStarsPeaked, haveStarsDimmed
+    global starCount, starsBuffer, stars, starsLevel, haveStarsPeaked, haveStarsDimmed
 
     starCount = 0
+    starsLevel = 0
     haveStarsPeaked = False
     haveStarsDimmed = False
 
@@ -210,6 +213,58 @@ def fadeStarLoop():
 
                 if sum(stars[star]["currColor"]) <= 0:
                     stars[star]["state"] = 0
+    else:
+        clearStars()
+        genStars()
+        stars = starsBuffer
+        starsBuffer = {}
+
+        time.sleep(1500 / 1000.0)
+
+    drawStars()
+
+def newFadeStarLoop():
+    global starCount, stars, starsBuffer, starsLevel, haveStarsPeaked, haveStarsDimmed
+
+    if SIM:
+        keys = list(stars.keys())
+    else:
+        keys = stars.keys()
+
+    if not haveStarsPeaked:
+        haveStarsPeaked = True
+        for star in keys:
+            if stars[star]["state"] == 1:
+                haveStarsPeaked = False
+
+                if stars[star]["currColor"][0] < stars[star]["targetColor"][0]:
+                    stars[star]["currColor"][0] = math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)
+                if stars[star]["currColor"][1] < stars[star]["targetColor"][1]:
+                    stars[star]["currColor"][1] = math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)
+                if stars[star]["currColor"][2] < stars[star]["targetColor"][2]:
+                    stars[star]["currColor"][2] = math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)
+
+                if sum(stars[star]["currColor"]) >= sum(stars[star]["targetColor"]):
+                    stars[star]["state"] = 2
+
+        starsLevel += 1
+    elif not haveStarsDimmed:
+        haveStarsDimmed = True
+        for star in keys:
+            if stars[star]["state"] == 2:
+                haveStarsDimmed = False
+
+                if stars[star]["currColor"][0] > 0:
+                    stars[star]["currColor"][0] = math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)
+                if stars[star]["currColor"][1] > 0:
+                    stars[star]["currColor"][1] = math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)
+                if stars[star]["currColor"][2] > 0:
+                    stars[star]["currColor"][2] = math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)
+
+                if sum(stars[star]["currColor"]) <= 0:
+                    stars[star]["state"] = 0
+
+        starsLevel -= 1
     else:
         clearStars()
         genStars()
@@ -355,11 +410,11 @@ def checkForAdjacent(nextStar):
 # MAIN LOOP
 ##############
 
-#fadeSetup()
-scrollSetup()
+fadeSetup()
+#scrollSetup()
 while True:
-    scrollStarLoop()
-    time.sleep(60 / 1000.0)
+    newFadeStarLoop()
+    #time.sleep(10 / 1000.0)
     #shStarLoop()
 
     if SIM:
