@@ -30,7 +30,8 @@ MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
 MAX_STARS = 50
-SPEED = 1
+SPEED = 2
+REFRESH = 0
 
 starCount = 0
 starsBuffer = {}
@@ -38,13 +39,14 @@ stars = {}
 prevStarTime = 0
 starDelay = 0
 starsLevel = 0
+shineDelay = 2000
 
 dx = 2
 dy = -1
 
 haveStarsPeaked = False
 haveStarsDimmed = False
-showNewStars = True
+readyToShine = False
 
 ################
 #SHOOTING STAR VARS
@@ -175,7 +177,7 @@ def clearStars():
     haveStarsDimmed = False
 
 def fadeStarLoop():
-    global starCount, stars, starsBuffer, haveStarsPeaked, haveStarsDimmed
+    global starCount, stars, starsBuffer, shineDelay, haveStarsPeaked, readyToShine, haveStarsDimmed
 
     if SIM:
         keys = list(stars.keys())
@@ -185,7 +187,6 @@ def fadeStarLoop():
     if not haveStarsPeaked:
         haveStarsPeaked = True
         for star in keys:
-            #find better way to do this vvv 
             if stars[star]["state"] == 1:
                 haveStarsPeaked = False
 
@@ -224,7 +225,7 @@ def fadeStarLoop():
     drawStars()
 
 def newFadeStarLoop():
-    global starCount, stars, starsBuffer, starsLevel, haveStarsPeaked, haveStarsDimmed
+    global starCount, stars, starsBuffer, starsLevel, haveStarsPeaked, readyToShine, haveStarsDimmed
 
     if SIM:
         keys = list(stars.keys())
@@ -236,18 +237,25 @@ def newFadeStarLoop():
         for star in keys:
             if stars[star]["state"] == 1:
                 haveStarsPeaked = False
+                currColor = stars[star]["currColor"]
+                targetColor = stars[star]["targetColor"]
 
-                if stars[star]["currColor"][0] < stars[star]["targetColor"][0]:
-                    stars[star]["currColor"][0] = math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)
-                if stars[star]["currColor"][1] < stars[star]["targetColor"][1]:
-                    stars[star]["currColor"][1] = math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)
-                if stars[star]["currColor"][2] < stars[star]["targetColor"][2]:
-                    stars[star]["currColor"][2] = math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)
+                if currColor[0] < targetColor[0]:
+                    stars[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED))
+                if currColor[1] < targetColor[1]:
+                    stars[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED))
+                if currColor[2] < targetColor[2]:
+                    stars[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED))
 
                 if sum(stars[star]["currColor"]) >= sum(stars[star]["targetColor"]):
                     stars[star]["state"] = 2
+                    readyToShine = True
 
         starsLevel += 1
+    elif readyToShine:
+        starsLevel -= 1
+        time.sleep(shineDelay / 1000.0)
+        readyToShine = False
     elif not haveStarsDimmed:
         haveStarsDimmed = True
         for star in keys:
@@ -255,11 +263,11 @@ def newFadeStarLoop():
                 haveStarsDimmed = False
 
                 if stars[star]["currColor"][0] > 0:
-                    stars[star]["currColor"][0] = math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)
+                    stars[star]["currColor"][0] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)))
                 if stars[star]["currColor"][1] > 0:
-                    stars[star]["currColor"][1] = math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)
+                    stars[star]["currColor"][1] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)))
                 if stars[star]["currColor"][2] > 0:
-                    stars[star]["currColor"][2] = math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)
+                    stars[star]["currColor"][2] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)))
 
                 if sum(stars[star]["currColor"]) <= 0:
                     stars[star]["state"] = 0
@@ -271,7 +279,7 @@ def newFadeStarLoop():
         stars = starsBuffer
         starsBuffer = {}
 
-        time.sleep(1500 / 1000.0)
+        #time.sleep(1500 / 1000.0)
 
     drawStars()
 
@@ -414,7 +422,7 @@ fadeSetup()
 #scrollSetup()
 while True:
     newFadeStarLoop()
-    #time.sleep(10 / 1000.0)
+    time.sleep(REFRESH / 1000.0)
     #shStarLoop()
 
     if SIM:
