@@ -19,9 +19,15 @@ else:
 ################
 #COLORS
 ################
-WHITE = (255, 255, 255)
-LIGHT_BLUE = (204, 224, 255)
-LIGHT_PURPLE = (201, 170, 242)
+COLOR_DICT = {
+    "WHITE": (255, 255, 255),
+    "WHITE2": (255, 255, 255),
+    "WHITE3": (255, 255, 255), #extra whites for higher chance of random selection
+    "LIGHT_BLUE":(204, 224, 255),
+    "CYAN2": (150, 204, 255),
+    "LIGHT_PURPLE": (201, 170, 242),
+    "YELLOW": (255, 253, 128)
+}
 
 ################
 #STAR VARS
@@ -30,7 +36,7 @@ MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
 MAX_STARS = 50
-SPEED = 2
+SPEED = 3
 REFRESH = 0
 
 starCount = 0
@@ -39,7 +45,7 @@ stars = {}
 prevStarTime = 0
 starDelay = 0
 starsLevel = 0
-shineDelay = 2000
+shineDelay = 2500
 
 dx = 2
 dy = -1
@@ -60,7 +66,7 @@ shStarData = {}
 prevShStarTime = time.time_ns()
 shStarDelay = (10**9) * random.randint(SH_DELAY_LOW, SH_DELAY_HIGH)
 
-shStarColor = LIGHT_BLUE
+shStarColor = COLOR_DICT["LIGHT_BLUE"]
 
 
 ######################################
@@ -152,10 +158,12 @@ def genStars():
         nextStar = (random.randint(0, WIDTH - 1), random.randint(0, HEIGHT - 1))
         hasAdjacent = checkForAdjacent(nextStar)
         if nextStar not in starsBuffer.keys() and not hasAdjacent:
-            randBrightness = random.randint(0, 255)
-            targetColor = (randBrightness, randBrightness, randBrightness)
+            randBrightness = random.randint(20, 255) / 255.0
+            randInd = random.randint(0, len(COLOR_DICT) - 1)
+            baseColor = list(COLOR_DICT.values())[randInd]
+            targetColor = tuple([randBrightness * i for i in baseColor])
+            fadeFactor = (targetColor[0] / (255.0 * 3), targetColor[1] / (255.0 * 3), targetColor[2] / (255.0 * 3))
 
-            fadeFactor = (targetColor[0] + targetColor[1] + targetColor[2]) / (255 * 3)
             starsBuffer[nextStar] = {
                 "state": 1, #0 -> inactive, 1 -> brightening, 2 -> peaking, -1 -> dimming
                 "currColor": [0, 0, 0], # rgb 
@@ -239,13 +247,14 @@ def newFadeStarLoop():
                 haveStarsPeaked = False
                 currColor = stars[star]["currColor"]
                 targetColor = stars[star]["targetColor"]
+                fadeFactor = stars[star]["fadeFactor"]
 
                 if currColor[0] < targetColor[0]:
-                    stars[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED))
+                    stars[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED))
                 if currColor[1] < targetColor[1]:
-                    stars[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED))
+                    stars[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED))
                 if currColor[2] < targetColor[2]:
-                    stars[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED))
+                    stars[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED))
 
                 if sum(stars[star]["currColor"]) >= sum(stars[star]["targetColor"]):
                     stars[star]["state"] = 2
@@ -261,13 +270,15 @@ def newFadeStarLoop():
         for star in keys:
             if stars[star]["state"] == 2:
                 haveStarsDimmed = False
+                currColor = stars[star]["currColor"]
+                fadeFactor = stars[star]["fadeFactor"]
 
-                if stars[star]["currColor"][0] > 0:
-                    stars[star]["currColor"][0] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)))
-                if stars[star]["currColor"][1] > 0:
-                    stars[star]["currColor"][1] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)))
-                if stars[star]["currColor"][2] > 0:
-                    stars[star]["currColor"][2] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * stars[star]["fadeFactor"]  * SPEED)))
+                if currColor[0] > 0:
+                    stars[star]["currColor"][0] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED)))
+                if currColor[1] > 0:
+                    stars[star]["currColor"][1] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED)))
+                if currColor[2] > 0:
+                    stars[star]["currColor"][2] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED)))
 
                 if sum(stars[star]["currColor"]) <= 0:
                     stars[star]["state"] = 0
@@ -339,7 +350,7 @@ def shStarLoop():
             xStart = random.randint(0, (WIDTH-1)//2)
             yStart = HEIGHT - 1
             slope = -1
-            dx = 1
+            dx = 1 
         elif edge == 3:
             xStart = 0
             yStart = random.randint(0, (HEIGHT-1)//2)
@@ -422,8 +433,8 @@ fadeSetup()
 #scrollSetup()
 while True:
     newFadeStarLoop()
-    time.sleep(REFRESH / 1000.0)
     #shStarLoop()
+    time.sleep(REFRESH / 1000.0)
 
     if SIM:
         time.sleep(5 / 1000.0) #delay to better simulate screen fps
