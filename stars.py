@@ -38,6 +38,9 @@ stars = {}
 prevStarTime = 0
 starDelay = 0
 
+dx = 2
+dy = -1
+
 haveStarsPeaked = False
 haveStarsDimmed = False
 showNewStars = True
@@ -59,14 +62,19 @@ shStarColor = LIGHT_BLUE
 
 ######################################
 
-def setup():
-    global stars, starsBuffer, showNewStars
+def fadeSetup():
+    global stars, starsBuffer
     matrix.start()
 
     genStars()
     stars = starsBuffer
     starsBuffer = {}
-    showNewStars = False
+
+def scrollSetup():
+    global stars
+    matrix.start()
+    genStars()
+    drawScrollStars()
 
 
 def starLoop():
@@ -141,7 +149,7 @@ def genStars():
         nextStar = (random.randint(0, WIDTH - 1), random.randint(0, HEIGHT - 1))
         hasAdjacent = checkForAdjacent(nextStar)
         if nextStar not in starsBuffer.keys() and not hasAdjacent:
-            randBrightness = random.randint(0, 255)
+            randBrightness = random.randint(0, 100)
             targetColor = (randBrightness, randBrightness, randBrightness)
 
             fadeFactor = (targetColor[0] + targetColor[1] + targetColor[2]) / (255 * 3)
@@ -163,14 +171,8 @@ def clearStars():
     haveStarsPeaked = False
     haveStarsDimmed = False
 
-def newStarLoop():
-    global starCount, stars, starsBuffer, showNewStars, haveStarsPeaked, haveStarsDimmed
-
-    # if haveStarsPeaked and haveStarsDimmed:
-    #     print("regen")
-    #     stars = starsBuffer
-    #     starsBuffer = {}
-    #     genStars()
+def fadeStarLoop():
+    global starCount, stars, starsBuffer, haveStarsPeaked, haveStarsDimmed
 
     if SIM:
         keys = list(stars.keys())
@@ -216,12 +218,38 @@ def newStarLoop():
 
         time.sleep(1500 / 1000.0)
 
-
     drawStars()
 
 def drawStars():
     for star in stars.keys():
         starColor = stars[star]["currColor"]
+        matrix.set_rgb(star[0], star[1], starColor[0], starColor[1], starColor[2])
+
+    matrix.flip()
+
+def scrollStarLoop():
+    global stars, starsBuffer, dx, dy
+
+    for star in stars.keys():
+        newX = (star[0] + dx) % WIDTH
+        newY = (star[1] + dy) % HEIGHT
+        starsBuffer[(newX, newY)] = stars[star]
+
+    removeStars()
+
+    stars = starsBuffer
+    starsBuffer = {}
+
+    drawScrollStars()
+
+def removeStars():
+    for star in stars.keys():
+        matrix.set_rgb(star[0], star[1], 0, 0, 0)
+
+def drawScrollStars():
+    for star in stars.keys():
+        
+        starColor = stars[star]["targetColor"]
         matrix.set_rgb(star[0], star[1], starColor[0], starColor[1], starColor[2])
 
     matrix.flip()
@@ -327,10 +355,11 @@ def checkForAdjacent(nextStar):
 # MAIN LOOP
 ##############
 
-setup()
+#fadeSetup()
+scrollSetup()
 while True:
-    newStarLoop()
-    time.sleep(10 / 1000.0)
+    scrollStarLoop()
+    time.sleep(60 / 1000.0)
     #shStarLoop()
 
     if SIM:
