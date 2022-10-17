@@ -24,10 +24,14 @@ COLOR_DICT = {
     "WHITE2": (255, 255, 255),
     "WHITE3": (255, 255, 255), #extra whites for higher chance of random selection
     "LIGHT_BLUE":(204, 224, 255),
-    "CYAN2": (150, 204, 255),
+    #"CYAN2": (150, 204, 255),
     "LIGHT_PURPLE": (201, 170, 242),
-    "YELLOW": (255, 253, 128)
+    #"YELLOW": (255, 254, 166)
 }
+
+################
+#CONSTELLATIONS
+################
 
 ################
 #STAR VARS
@@ -35,7 +39,7 @@ COLOR_DICT = {
 MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
-MAX_STARS = 50
+MAX_STARS = 40
 SPEED = 3
 REFRESH = 0
 
