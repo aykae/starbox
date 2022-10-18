@@ -348,24 +348,20 @@ def newFadeStarLoop():
     drawStars()
 
 def overlapFadeStarLoop():
-    global starCount, stars, starsBuffer, starsLevel, haveStarsPeaked, readyToShine, haveStarsDimmed
+    global starCount, stars, starsBuffer, starsLevel, starsLevelPeak
+    global haveStarsPeaked, readyToShine, haveStarsDimmed
 
     if starsLevel <= 255 and not haveStarsPeaked:
         readyToShine = True
         for star in stars.keys():
-            currColor = stars[star]["currColor"]
-            targetColor = stars[star]["targetColor"]
             fadeFactor = stars[star]["fadeFactor"]
 
-            if currColor[0] < targetColor[0]:
-                stars[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED))
-            if currColor[1] < targetColor[1]:
-                stars[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED))
-            if currColor[2] < targetColor[2]:
-                stars[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED))
+            stars[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED))
+            stars[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED))
+            stars[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED))
 
         starsLevel += 1
-    else:
+    elif not haveStarsPeaked:
         #starsLevel reached max brightness
         starsLevel -= 1
         starsLevelPeak = starsLevel
@@ -380,30 +376,19 @@ def overlapFadeStarLoop():
 
     if starsLevel >= 0 and haveStarsPeaked and not readyToShine:
         for star in stars.keys():
-            haveStarsDimmed = False
-            currColor = stars[star]["currColor"]
             fadeFactor = stars[star]["fadeFactor"]
 
-            if currColor[0] > 0:
-                stars[star]["currColor"][0] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED)))
-            if currColor[1] > 0:
-                stars[star]["currColor"][1] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED)))
-            if currColor[2] > 0:
-                stars[star]["currColor"][2] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED)))
+            stars[star]["currColor"][0] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED)))
+            stars[star]["currColor"][1] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED)))
+            stars[star]["currColor"][2] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED)))
 
         for star in starsBuffer.keys():
-            invStarsLevel = starsLevelPeak - starsLevel
-            #invStarsLevel = 255 - starsLevel
-            currColor = starsBuffer[star]["currColor"]
-            targetColor = starsBuffer[star]["targetColor"]
+            invStarsLevel = max(0, min(MAX_BRIGHTNESS, starsLevelPeak - starsLevel))
             fadeFactor = starsBuffer[star]["fadeFactor"]
 
-            if currColor[0] < targetColor[0]:
-                starsBuffer[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[0]  * SPEED))
-            if currColor[1] < targetColor[1]:
-                starsBuffer[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[1]  * SPEED))
-            if currColor[2] < targetColor[2]:
-                starsBuffer[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[2]  * SPEED))
+            starsBuffer[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[0]  * SPEED))
+            starsBuffer[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[1]  * SPEED))
+            starsBuffer[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[2]  * SPEED))
 
         starsLevel -= 1
         haveStarsDimmed = True
