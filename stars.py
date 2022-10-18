@@ -40,7 +40,7 @@ MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
 MAX_STARS = 50
-SPEED = 4
+SPEED = 10
 REFRESH = 0
 
 starCount = 0
@@ -49,6 +49,7 @@ stars = {}
 prevStarTime = 0
 starDelay = 0
 starsLevel = 0
+starsLevelPeak = 0
 shineDelay = 2500
 
 dx = 2
@@ -83,6 +84,19 @@ def fadeSetup():
     stars = starsBuffer
     starsBuffer = {}
 
+def overlapFadeSetup():
+    global stars, starsBuffer, starsLevel, haveStarsPeaked, haveStarsDimmed, readyToShine
+    matrix.start()
+
+    starsLevel = 0
+    # haveStarsPeaked = False
+    # haveStarsDimmed = False
+    # readyToShine = False
+
+    genStars()
+    stars = starsBuffer
+    starsBuffer = {}
+
 def scrollSetup():
     global stars
     matrix.start()
@@ -99,7 +113,6 @@ def hybridSetup():
 
     hybridStarInit()
 
-
 def starLoop():
     global starCount, stars, prevStarTime, starDelay
 
@@ -111,7 +124,7 @@ def starLoop():
             while starCount == prevStarCount: #while new star not yet added
                 nextStar = (random.randint(0, WIDTH-1), random.randint(0, HEIGHT-1))
                 hasAdjacent = checkForAdjacent(nextStar)
-                if nextStar not in stars.keys() and (time.time_ns() - prevStarTime) >= starDelay and not hasAdjacent:
+                if not hasAdjacent and (time.time_ns() - prevStarTime) >= starDelay:
                     prevStarTime = time.time_ns()
                     #starDelay = (10**9) * random.random() / 5
                     starDelay = (10**9) * 0.001
@@ -164,6 +177,32 @@ def starLoop():
 
     drawStars()
 
+def genStar():
+    global starCount, stars
+
+    nextStar = (-1, -1)
+    hasAdjacent = True
+    while hasAdjacent:
+        nextStar = (random.randint(0, WIDTH - 1), random.randint(0, HEIGHT - 1))
+        hasAdjacent = checkForAdjacent(nextStar)
+        if not hasAdjacent:
+            randBrightness = random.randint(20, 255) / 255.0
+            randInd = random.randint(0, len(COLOR_DICT) - 1)
+            baseColor = list(COLOR_DICT.values())[randInd]
+            targetColor = tuple([randBrightness * i for i in baseColor])
+            fadeFactor = (targetColor[0] / (255.0 * 3), targetColor[1] / (255.0 * 3), targetColor[2] / (255.0 * 3))
+
+            stars[nextStar] = {
+                "state": 1, #0 -> inactive, 1 -> brightening, 2 -> peaking, -1 -> dimming
+                "currColor": [0, 0, 0], # rgb 
+                "targetColor": targetColor, #rgb
+                "fadeFactor": fadeFactor, #float for incrementing stars proportionally
+                "dimDelay": 0, # int, nanoseconds
+                "flickerDir": 0, # -1 or 1; direction of flicker
+            }
+
+            starCount += 1
+            return nextStar
 
 def genStars():
     global starCount, starsBuffer, stars
@@ -171,7 +210,7 @@ def genStars():
     while starCount < MAX_STARS:
         nextStar = (random.randint(0, WIDTH - 1), random.randint(0, HEIGHT - 1))
         hasAdjacent = checkForAdjacent(nextStar)
-        if nextStar not in starsBuffer.keys() and not hasAdjacent:
+        if not hasAdjacent:
             randBrightness = random.randint(20, 255) / 255.0
             randInd = random.randint(0, len(COLOR_DICT) - 1)
             baseColor = list(COLOR_DICT.values())[randInd]
@@ -188,7 +227,6 @@ def genStars():
             }
 
             starCount += 1
-
 
 def clearStars():
     global starCount, starsBuffer, stars, starsLevel, haveStarsPeaked, haveStarsDimmed
@@ -279,6 +317,7 @@ def newFadeStarLoop():
         starsLevel -= 1
         time.sleep(shineDelay / 1000.0)
         readyToShine = False
+        genStars()
     elif not haveStarsDimmed:
         haveStarsDimmed = True
         for star in keys:
@@ -308,6 +347,80 @@ def newFadeStarLoop():
 
     drawStars()
 
+def overlapFadeStarLoop():
+    global starCount, stars, starsBuffer, starsLevel, haveStarsPeaked, readyToShine, haveStarsDimmed
+
+    if starsLevel <= 255 and not haveStarsPeaked:
+        readyToShine = True
+        for star in stars.keys():
+            currColor = stars[star]["currColor"]
+            targetColor = stars[star]["targetColor"]
+            fadeFactor = stars[star]["fadeFactor"]
+
+            if currColor[0] < targetColor[0]:
+                stars[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED))
+            if currColor[1] < targetColor[1]:
+                stars[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED))
+            if currColor[2] < targetColor[2]:
+                stars[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED))
+
+        starsLevel += 1
+    else:
+        #starsLevel reached max brightness
+        starsLevel -= 1
+        starsLevelPeak = starsLevel
+        haveStarsPeaked = True
+
+    if haveStarsPeaked and readyToShine:
+        time.sleep(shineDelay / 1000.0)
+        readyToShine = False
+        #potentially include this line v within genStars()
+        starCount = 0
+        genStars()
+
+    if starsLevel >= 0 and haveStarsPeaked and not readyToShine:
+        for star in stars.keys():
+            haveStarsDimmed = False
+            currColor = stars[star]["currColor"]
+            fadeFactor = stars[star]["fadeFactor"]
+
+            if currColor[0] > 0:
+                stars[star]["currColor"][0] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED)))
+            if currColor[1] > 0:
+                stars[star]["currColor"][1] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED)))
+            if currColor[2] > 0:
+                stars[star]["currColor"][2] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED)))
+
+        for star in starsBuffer.keys():
+            invStarsLevel = starsLevelPeak - starsLevel
+            #invStarsLevel = 255 - starsLevel
+            currColor = starsBuffer[star]["currColor"]
+            targetColor = starsBuffer[star]["targetColor"]
+            fadeFactor = starsBuffer[star]["fadeFactor"]
+
+            if currColor[0] < targetColor[0]:
+                starsBuffer[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[0]  * SPEED))
+            if currColor[1] < targetColor[1]:
+                starsBuffer[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[1]  * SPEED))
+            if currColor[2] < targetColor[2]:
+                starsBuffer[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[2]  * SPEED))
+
+        starsLevel -= 1
+        haveStarsDimmed = True
+    elif haveStarsDimmed:
+        haveStarsDimmed = False
+        clearStars()
+        stars = starsBuffer
+        starsBuffer = {}
+
+        #time.sleep(1500 / 1000.0)
+
+    overlapFadeDrawStars()
+    
+    #init already generated stars and begun thei
+    #call function to
+
+
 def hybridStarInit():
     global starCount, stars, starsBuffer, starsLevel, haveStarsPeaked, readyToShine, haveStarsDimmed
 
@@ -324,7 +437,6 @@ def hybridStarInit():
 
         drawStars()
 
-
 def hybridStarLoop():
     global starCount, stars, starsBuffer, starsLevel, haveStarsPeaked, readyToShine, haveStarsDimmed
 
@@ -332,29 +444,59 @@ def hybridStarLoop():
     if activeStars <= 0:
         return
 
-    star = list(stars.keys())[random.randint(0, activeStars - 1)]
+    #Remove star
+    oldStar = list(stars.keys())[random.randint(0, activeStars - 1)]
 
     starsLevel = 255
     while starsLevel >= 0:
-        fadeFactor = stars[star]["fadeFactor"]
+        fadeFactor = stars[oldStar]["fadeFactor"]
 
-        stars[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED))
-        stars[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED))
-        stars[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED))
+        stars[oldStar]["currColor"][0] = max(0, math.floor(starsLevel * fadeFactor[0]  * SPEED))
+        stars[oldStar]["currColor"][1] = max(0, math.floor(starsLevel * fadeFactor[1]  * SPEED))
+        stars[oldStar]["currColor"][2] = max(0, math.floor(starsLevel * fadeFactor[2]  * SPEED))
 
         starsLevel -= 1
 
         drawStars()
-    
+
     #remove star
-    stars.pop(star)
+    stars.pop(oldStar)
+    starCount -= 1
 
-    time.sleep(500 / 1000.0)
+    #Add new star
+    newStar = genStar()
 
+    starsLevel = 0
+    while starsLevel <= 255:
+        fadeFactor = stars[newStar]["fadeFactor"]
+
+        stars[newStar]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED))
+        stars[newStar]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED))
+        stars[newStar]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED))
+
+        starsLevel += 1
+
+        drawStars()
+
+    starCount += 1
+
+
+    time.sleep(0 / 1000.0)
 
 def drawStars():
     for star in stars.keys():
         starColor = stars[star]["currColor"]
+        matrix.set_rgb(star[0], star[1], starColor[0], starColor[1], starColor[2])
+
+    matrix.flip()
+
+def overlapFadeDrawStars():
+    for star in stars.keys():
+        starColor = stars[star]["currColor"]
+        matrix.set_rgb(star[0], star[1], starColor[0], starColor[1], starColor[2])
+
+    for star in starsBuffer.keys():
+        starColor = starsBuffer[star]["currColor"]
         matrix.set_rgb(star[0], star[1], starColor[0], starColor[1], starColor[2])
 
     matrix.flip()
@@ -467,8 +609,10 @@ def checkForAdjacent(nextStar):
     keys = stars.keys()
     nsX = nextStar[0]
     nsY = nextStar[1]
-
-    if (nsX + 1, nsY) in keys:
+    
+    if (nsX, nsY) in keys:
+        return True
+    elif (nsX + 1, nsY) in keys:
         return True
     elif (nsX - 1, nsY) in keys:
         return True
@@ -484,11 +628,12 @@ def checkForAdjacent(nextStar):
 # MAIN LOOP
 ##############
 
-#fadeSetup()
-hybridSetup()
+overlapFadeSetup()
+#hybridSetup()
 while True:
     #newFadeStarLoop()
-    hybridStarLoop()
+    #hybridStarLoop()
+    overlapFadeStarLoop()
     #shStarLoop()
     time.sleep(REFRESH / 1000.0)
 
