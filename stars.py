@@ -89,6 +89,16 @@ def scrollSetup():
     genStars()
     drawScrollStars()
 
+def hybridSetup():
+    global stars, starsBuffer
+    matrix.start()
+    genStars()
+
+    stars = starsBuffer
+    starsBuffer = {}
+
+    hybridStarInit()
+
 
 def starLoop():
     global starCount, stars, prevStarTime, starDelay
@@ -298,6 +308,50 @@ def newFadeStarLoop():
 
     drawStars()
 
+def hybridStarInit():
+    global starCount, stars, starsBuffer, starsLevel, haveStarsPeaked, readyToShine, haveStarsDimmed
+
+    starsLevel = 0
+    while starsLevel <= 255:
+        for star in stars.keys():
+            fadeFactor = stars[star]["fadeFactor"]
+
+            stars[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED))
+            stars[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED))
+            stars[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED))
+
+        starsLevel += 1
+
+        drawStars()
+
+
+def hybridStarLoop():
+    global starCount, stars, starsBuffer, starsLevel, haveStarsPeaked, readyToShine, haveStarsDimmed
+
+    activeStars = len(stars)
+    if activeStars <= 0:
+        return
+
+    star = list(stars.keys())[random.randint(0, activeStars - 1)]
+
+    starsLevel = 255
+    while starsLevel >= 0:
+        fadeFactor = stars[star]["fadeFactor"]
+
+        stars[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED))
+        stars[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED))
+        stars[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED))
+
+        starsLevel -= 1
+
+        drawStars()
+    
+    #remove star
+    stars.pop(star)
+
+    time.sleep(500 / 1000.0)
+
+
 def drawStars():
     for star in stars.keys():
         starColor = stars[star]["currColor"]
@@ -404,11 +458,8 @@ def drawShStars():
 
     matrix.flip()
 
-
 def constellationLoop():
     pass
-
-
 
 def checkForAdjacent(nextStar):
     global stars
@@ -433,10 +484,11 @@ def checkForAdjacent(nextStar):
 # MAIN LOOP
 ##############
 
-fadeSetup()
-#scrollSetup()
+#fadeSetup()
+hybridSetup()
 while True:
-    newFadeStarLoop()
+    #newFadeStarLoop()
+    hybridStarLoop()
     #shStarLoop()
     time.sleep(REFRESH / 1000.0)
 
