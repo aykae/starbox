@@ -42,6 +42,8 @@ def drawStars():
         #matrix.set_rgb(0, 0, math.floor(starBrightness * ORANGE[0]), math.floor(starBrightness * ORANGE[1]), math.floor(starBrightness * ORANGE[2]))
     matrix.flip()
 
+
+
 setup()
 while True:
     drawStars()
