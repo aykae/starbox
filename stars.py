@@ -38,7 +38,7 @@ MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
 MAX_STARS = 50
-SPEED = 1
+SPEED = 5
 REFRESH = 0
 
 starCount = 0
@@ -48,7 +48,7 @@ prevStarTime = 0
 starDelay = 0
 starsLevel = 0
 starsLevelPeak = 0
-shineDelay = 1000
+shineDelay = 4000
 
 dx = 2
 dy = -1
@@ -213,8 +213,8 @@ def genStars():
         if not hasAdjacent:
 
             randBrightness = weightedRandom(
-                [10, 20, 60, 80, 100, 255],
-                [10, 10, 4, 3, 2, 1]
+                [10, 20, 60, 80, 100, 150, 255],
+                [10, 8, 5, 4, 3, 2, 5]
             ) / 255.0
 
             #randInd = random.randint(0, len(COLOR_DICT) - 1)
