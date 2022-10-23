@@ -50,14 +50,15 @@ prevStarTime = 0
 starDelay = 0
 starsLevel = 0
 starsLevelPeak = 0
-shineDelay = 2500
+shineDelay = 1000
 
 dx = 2
 dy = -1
 
-haveStarsPeaked = False
-haveStarsDimmed = False
-readyToShine = False
+isFirstStars = True
+isPeaking = False
+isDimming = False
+isShining = False
 
 ################
 #SHOOTING STAR VARS
@@ -85,9 +86,10 @@ def fadeSetup():
     starsBuffer = {}
 
 def overlapFadeSetup():
-    global stars, starsBuffer, starsLevel, haveStarsPeaked, haveStarsDimmed, readyToShine
+    global stars, starsBuffer, starsLevel, isFirstStars, isPeaking, isDimming, isShining
     matrix.start()
 
+    isFirstStars = True
     starsLevel = 0
     # haveStarsPeaked = False
     # haveStarsDimmed = False
@@ -229,12 +231,11 @@ def genStars():
             starCount += 1
 
 def clearStars():
-    global starCount, starsBuffer, stars, starsLevel, haveStarsPeaked, haveStarsDimmed
+    global starCount, starsBuffer, stars, starsLevel, isPeaking, isDimming
 
     starCount = 0
     starsLevel = 0
-    haveStarsPeaked = False
-    haveStarsDimmed = False
+    isDimming = False
 
 def fadeStarLoop():
     global starCount, stars, starsBuffer, shineDelay, haveStarsPeaked, readyToShine, haveStarsDimmed
@@ -285,7 +286,7 @@ def fadeStarLoop():
     drawStars()
 
 def newFadeStarLoop():
-    global starCount, stars, starsBuffer, starsLevel, haveStarsPeaked, readyToShine, haveStarsDimmed
+    global starCount, stars, starsBuffer, starsLevel, isPeaking, isShining, isDimming 
 
     if SIM:
         keys = list(stars.keys())
@@ -349,56 +350,63 @@ def newFadeStarLoop():
 
 def overlapFadeStarLoop():
     global starCount, stars, starsBuffer, starsLevel, starsLevelPeak
-    global haveStarsPeaked, readyToShine, haveStarsDimmed
+    global isFirstStars, isPeaking, isShining, isDimming 
 
-    if starsLevel <= 255 and not haveStarsPeaked:
-        readyToShine = True
-        for star in stars.keys():
-            fadeFactor = stars[star]["fadeFactor"]
+    #Edge case for drawing first group of stars
+    if isFirstStars:
+        if starsLevel <= 255:
+            isShining = True
+            for star in stars.keys():
+                fadeFactor = stars[star]["fadeFactor"]
 
-            stars[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED))
-            stars[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED))
-            stars[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED))
+                stars[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED))
+                stars[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED))
+                stars[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED))
 
-        starsLevel += 1
-    elif not haveStarsPeaked:
-        #starsLevel reached max brightness
-        starsLevel -= 1
-        starsLevelPeak = starsLevel
-        haveStarsPeaked = True
+            starsLevel += 1
+        else:
+            #starsLevel reached max brightness
+            starsLevel = 255
+            starsLevelPeak = 255
+            isFirstStars = False
+            isPeaking = True
 
-    if haveStarsPeaked and readyToShine:
+    if isPeaking:
         time.sleep(shineDelay / 1000.0)
-        readyToShine = False
+        isPeaking = False
+        isDimming = True
+
         #potentially include this line v within genStars()
         starCount = 0
         genStars()
+    
+    if isDimming:
+        if starsLevel >= 0:
+            for star in stars.keys():
+                fadeFactor = stars[star]["fadeFactor"]
 
-    if starsLevel >= 0 and haveStarsPeaked and not readyToShine:
-        for star in stars.keys():
-            fadeFactor = stars[star]["fadeFactor"]
+                stars[star]["currColor"][0] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED)))
+                stars[star]["currColor"][1] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED)))
+                stars[star]["currColor"][2] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED)))
 
-            stars[star]["currColor"][0] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]  * SPEED)))
-            stars[star]["currColor"][1] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]  * SPEED)))
-            stars[star]["currColor"][2] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]  * SPEED)))
+            for star in starsBuffer.keys():
+                invStarsLevel = max(0, min(MAX_BRIGHTNESS, starsLevelPeak - starsLevel))
+                fadeFactor = starsBuffer[star]["fadeFactor"]
 
-        for star in starsBuffer.keys():
-            invStarsLevel = max(0, min(MAX_BRIGHTNESS, starsLevelPeak - starsLevel))
-            fadeFactor = starsBuffer[star]["fadeFactor"]
+                starsBuffer[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[0]  * SPEED))
+                starsBuffer[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[1]  * SPEED))
+                starsBuffer[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[2]  * SPEED))
 
-            starsBuffer[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[0]  * SPEED))
-            starsBuffer[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[1]  * SPEED))
-            starsBuffer[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[2]  * SPEED))
+            starsLevel -= 1
+        else:
+            isDimming = False
+            isPeaking = True
 
-        starsLevel -= 1
-        haveStarsDimmed = True
-    elif haveStarsDimmed:
-        haveStarsDimmed = False
-        clearStars()
-        stars = starsBuffer
-        starsBuffer = {}
+            starsLevel = 255
 
-        #time.sleep(1500 / 1000.0)
+            stars = starsBuffer
+            starsBuffer = {}
+
 
     overlapFadeDrawStars()
     
