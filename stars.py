@@ -45,10 +45,13 @@ starCount = 0
 starsBuffer = {}
 stars = {}
 prevStarTime = 0
+
 starDelay = 0
 starsLevel = 0
+
 starsLevelPeak = 0
-shineDelay = 4000
+peakStartTime = 0
+shineDelay = 4
 
 dx = 2
 dy = -1
@@ -57,6 +60,7 @@ isFirstStars = True
 isPeaking = False
 isDimming = False
 isShining = False
+isShooting = False
 
 ################
 #SHOOTING STAR VARS
@@ -64,7 +68,7 @@ isShining = False
 SS_FADE_SPEED = 10
 SH_DELAY_HIGH = 8
 SH_DELAY_LOW = SH_DELAY_HIGH // 2
-
+SH_ODDS = 0.1
 shStarTrail = {}
 shStarData = {}
 prevShStarTime = time.time_ns()
@@ -220,7 +224,7 @@ def genStars():
             #randInd = random.randint(0, len(COLOR_DICT) - 1)
             randInd = weightedRandom(
                 [0, 1, 2],
-                [3, 2, 2]
+                [3, 2, 3]
             )
             baseColor = list(COLOR_DICT.values())[randInd]
             targetColor = tuple([int(randBrightness * i) for i in baseColor])
@@ -368,8 +372,9 @@ def newFadeStarLoop():
     drawStars()
 
 def overlapFadeStarLoop():
-    global starCount, stars, starsBuffer, starsLevel, starsLevelPeak
-    global isFirstStars, isPeaking, isShining, isDimming 
+    global starCount, stars, starsBuffer, starsLevel, starsLevelPeak, shStarTrail
+    global isFirstStars, isPeaking, isShining, isDimming, isShooting
+    global peakStartTime
 
     #Edge case for drawing first group of stars
     if isFirstStars:
@@ -389,15 +394,19 @@ def overlapFadeStarLoop():
             starsLevelPeak = 255
             isFirstStars = False
             isPeaking = True
+            isShooting = True
+            peakStartTime = time.time_ns()
 
     if isPeaking:
-        time.sleep(shineDelay / 1000.0)
-        isPeaking = False
-        isDimming = True
+        if time.time_ns() - peakStartTime >= (10**9) * shineDelay:
+            isPeaking = False
+            isDimming = True
 
-        #potentially include this line v within genStars()
-        starCount = 0
-        genStars()
+            #potentially include this line v within genStars()
+            starCount = 0
+            genStars()
+
+        overlapShStarLoop()
     
     if isDimming:
         if starsLevel >= 0:
@@ -420,6 +429,9 @@ def overlapFadeStarLoop():
         else:
             isDimming = False
             isPeaking = True
+            peakStartTime = time.time_ns()
+            if random.random() < SH_ODDS:
+                isShooting = True
 
             starsLevel = 255
 
@@ -429,8 +441,70 @@ def overlapFadeStarLoop():
 
     overlapFadeDrawStars()
     
-    #init already generated stars and begun thei
-    #call function to
+
+def overlapShStarLoop():
+    global shStarDelay, shStarData, shStarTrail, shStarColor, isShining, isShooting, peakStartTime
+
+    if len(shStarTrail) == 0 and isPeaking and isShooting and (time.time_ns() - peakStartTime > (10**9) * 1):
+        edge = random.randint(0, 4) #top, right, bot, left
+        xStart = yStart = -1
+        slope = dx = 0
+
+        if edge == 0:
+            xStart = random.randint((WIDTH-1)//2, WIDTH-1)
+            yStart = 0
+            slope = 1
+            dx = -1
+        elif edge == 1:
+            xStart = WIDTH - 1
+            yStart = random.randint((HEIGHT-1)//2, HEIGHT-1)
+            slope = -1
+            dx = -1
+        elif edge == 2:
+            xStart = random.randint(0, (WIDTH-1)//2)
+            yStart = HEIGHT - 1
+            slope = -1
+            dx = 1 
+        elif edge == 3:
+            xStart = 0
+            yStart = random.randint(0, (HEIGHT-1)//2)
+            slope = 1 
+            dx = 1
+
+        shStarData['head'] = (xStart, yStart)
+        shStarData['slope'] = slope
+        shStarData['dx'] = dx
+
+        shStarTrail[shStarData['head']] = shStarColor
+
+    #compute shooting star trail
+    if len(shStarTrail) > 0:
+        drawShStars()
+
+        if SIM:
+            keys = list(shStarTrail.keys())
+        else:
+            keys = shStarTrail.keys()
+
+        for t in keys:
+            tColor = shStarTrail[t]
+            if tColor == (0, 0, 0):
+                shStarTrail.pop(t)
+            else:
+                shStarTrail[t] = (max(0, tColor[0] - SS_FADE_SPEED), max(0, tColor[1] - SS_FADE_SPEED), max(0, tColor[2] - SS_FADE_SPEED))
+
+        head = shStarData['head']
+        dx = shStarData['dx']
+        slope = shStarData['slope']
+        newHead = (head[0] + dx, head[1] + slope)
+        if (newHead[0] >= 0) and (newHead[0] < WIDTH) and (newHead[1] >= 0) and (newHead[1] < HEIGHT): #head trailed off screen
+            shStarData['head'] = newHead
+            shStarTrail[newHead] = shStarColor
+
+        isShooting = False
+    else:
+        shStarData = {}
+        shStarTrail = {}
 
 
 def hybridStarInit():
@@ -503,13 +577,20 @@ def drawStars():
     matrix.flip()
 
 def overlapFadeDrawStars():
+    #draw brightening stars
     for star in stars.keys():
         starColor = stars[star]["currColor"]
         matrix.set_rgb(star[0], star[1], starColor[0], starColor[1], starColor[2])
 
+    #draw dimming stars
     for star in starsBuffer.keys():
         starColor = starsBuffer[star]["currColor"]
         matrix.set_rgb(star[0], star[1], starColor[0], starColor[1], starColor[2])
+
+    #draw shooting stars
+    for sh in shStarTrail.keys():
+        starColor = shStarTrail[sh]
+        matrix.set_rgb(sh[0], sh[1], starColor[0], starColor[1], starColor[2])
 
     matrix.flip()
 
