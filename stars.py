@@ -45,7 +45,7 @@ MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
 MAX_STARS = 50 
-SPEED = 3
+SPEED = 5
 REFRESH = 0
 
 starCount = 0
@@ -134,6 +134,33 @@ def overlapFadeStarLoop():
             #potentially include this line v within genStars()
             starCount = 0
             genStars()
+        else:
+            #flicker
+            numStars = len(stars)
+            keys = list(stars.keys())
+
+            for i in range(5):
+                randStar = keys[random.randint(0, numStars-1)]
+                currColor = stars[randStar]["currColor"]
+                fadeFactor = stars[randStar]["fadeFactor"]
+                flickerFactor = sum(fadeFactor) * 255 / 3
+                flickerFactor = random.randint(10, 25)
+
+                dir = stars[randStar]["flickerDir"]
+                # limit stars affected
+                if dir == 1:
+                    ff = flickerFactor
+                elif dir == -1:
+                    ff = -flickerFactor
+                else:
+                    ff = 0
+
+                stars[randStar]["currColor"][0] = max(0, min(MAX_BRIGHTNESS, math.floor(ff + currColor[0])))
+                stars[randStar]["currColor"][1] = max(0, min(MAX_BRIGHTNESS, math.floor(ff + currColor[1])))
+                stars[randStar]["currColor"][2] = max(0, min(MAX_BRIGHTNESS, math.floor(ff + currColor[2])))
+
+                stars[randStar]["flickerDir"] = -dir
+
 
         overlapShStarLoop()
     
@@ -141,9 +168,6 @@ def overlapFadeStarLoop():
         if starsLevel >= 0:
             for star in stars.keys():
                 fadeFactor = stars[star]["fadeFactor"]
-                #
-                #currColor = stars[star]["currColor"]
-                #fadeFactor = bezierFade(currColor)
 
                 stars[star]["currColor"][0] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0])))
                 stars[star]["currColor"][1] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1])))
@@ -152,9 +176,6 @@ def overlapFadeStarLoop():
             for star in starsBuffer.keys():
                 invStarsLevel = max(0, min(MAX_BRIGHTNESS, starsLevelPeak - starsLevel))
                 fadeFactor = starsBuffer[star]["fadeFactor"]
-                #
-                #currColor = stars[star]["currColor"]
-                #fadeFactor = bezierFade(currColor)
 
                 starsBuffer[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[0]))
                 starsBuffer[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[1]))
@@ -336,13 +357,17 @@ def genStars():
             targetColor = tuple([int(randBrightness * i) for i in baseColor])
             fadeFactor = (targetColor[0] / 255.0, targetColor[1] / 255.0, targetColor[2] / 255.0)
 
+            colorSum = sum(targetColor)
+            fdir = random.choice([-1, 1]) if colorSum > 250 else 0
+
+
             starsBuffer[nextStar] = {
                 "state": 1, #0 -> inactive, 1 -> brightening, 2 -> peaking, -1 -> dimming
                 "currColor": [0, 0, 0], # rgb 
                 "targetColor": targetColor, #rgb
                 "fadeFactor": fadeFactor, #float for incrementing stars proportionally
                 "dimDelay": 0, # int, nanoseconds
-                "flickerDir": 0, # -1 or 1; direction of flicker
+                "flickerDir": fdir, # -1 or 1; direction of flicker
             }
 
             starCount += 1
