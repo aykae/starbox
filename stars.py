@@ -45,7 +45,7 @@ MAX_BRIGHTNESS = 255
 MIN_FLICKER = 20 
 MAX_FLICKER = 25
 MAX_STARS = 50 
-SPEED = 5
+SPEED = 3
 REFRESH = 0
 
 starCount = 0
@@ -58,7 +58,7 @@ starsLevel = 0
 
 starsLevelPeak = 0
 peakStartTime = 0
-shineDelay = 4
+shineDelay = 5
 
 dx = 2
 dy = -1
@@ -72,7 +72,7 @@ isShooting = False
 ################
 #SHOOTING STAR VARS
 ################
-SS_FADE_SPEED = 10
+SH_FADE_SPEED = 10
 SH_DELAY_HIGH = 8
 SH_DELAY_LOW = SH_DELAY_HIGH // 2
 SH_ODDS = 0.1
@@ -108,6 +108,9 @@ def overlapFadeStarLoop():
             isShining = True
             for star in stars.keys():
                 fadeFactor = stars[star]["fadeFactor"]
+                #
+                #currColor = stars[star]["currColor"]
+                #fadeFactor = bezierFade(currColor)
 
                 stars[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]))
                 stars[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]))
@@ -138,6 +141,9 @@ def overlapFadeStarLoop():
         if starsLevel >= 0:
             for star in stars.keys():
                 fadeFactor = stars[star]["fadeFactor"]
+                #
+                #currColor = stars[star]["currColor"]
+                #fadeFactor = bezierFade(currColor)
 
                 stars[star]["currColor"][0] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0])))
                 stars[star]["currColor"][1] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1])))
@@ -146,6 +152,9 @@ def overlapFadeStarLoop():
             for star in starsBuffer.keys():
                 invStarsLevel = max(0, min(MAX_BRIGHTNESS, starsLevelPeak - starsLevel))
                 fadeFactor = starsBuffer[star]["fadeFactor"]
+                #
+                #currColor = stars[star]["currColor"]
+                #fadeFactor = bezierFade(currColor)
 
                 starsBuffer[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[0]))
                 starsBuffer[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[1]))
@@ -165,6 +174,26 @@ def overlapFadeStarLoop():
             starsBuffer = {}
 
     overlapFadeDrawStars()
+
+def bezierFade(color):
+
+    r = color[0] / 255.0
+    b = color[1] / 255.0
+    g = color[2] / 255.0
+
+    rSq = r ** 2
+    rPara = rSq / (2.0 * (rSq - r) + 1.0)
+
+    rPara = 2.0 * r * (1.0 - r)
+
+
+    bSq = b ** 2
+    bPara = 2.0 * b * (1.0 - b)
+
+    gSq = g ** 2
+    gPara = 2.0 * g * (1.0 - g)
+    
+    return (rPara, bPara, gPara)
 
 def overlapShStarLoop():
     global shStarDelay, shStarData, shStarTrail, shStarColor, isShining, isShooting, peakStartTime
@@ -215,7 +244,7 @@ def overlapShStarLoop():
             if tColor == (0, 0, 0):
                 shStarTrail.pop(t)
             else:
-                shStarTrail[t] = (max(0, tColor[0] - SS_FADE_SPEED), max(0, tColor[1] - SS_FADE_SPEED), max(0, tColor[2] - SS_FADE_SPEED))
+                shStarTrail[t] = (max(0, tColor[0] - SH_FADE_SPEED), max(0, tColor[1] - SH_FADE_SPEED), max(0, tColor[2] - SH_FADE_SPEED))
 
         head = shStarData['head']
         dx = shStarData['dx']
