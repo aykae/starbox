@@ -5,7 +5,10 @@ matrix = hub75.Hub75(WIDTH, HEIGHT)
 ORANGE = (230, 184, 46)
 offsetX = 20
 offsetY = 20
+
 currConst = "bigdipper"
+#currConst =  "cancer"
+
 #constellations structured with points from left to right of form (relative position->brightness)
 const = {
     "cancer": {
