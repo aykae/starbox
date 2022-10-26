@@ -112,9 +112,9 @@ def overlapFadeStarLoop():
                 #currColor = stars[star]["currColor"]
                 #fadeFactor = bezierFade(currColor)
 
-                stars[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0]))
-                stars[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1]))
-                stars[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2]))
+                stars[star]["currColor"][0] = maximin(math.floor(starsLevel * fadeFactor[0]))
+                stars[star]["currColor"][1] = maximin(math.floor(starsLevel * fadeFactor[1]))
+                stars[star]["currColor"][2] = maximin(math.floor(starsLevel * fadeFactor[2]))
 
             starsLevel += SPEED
         else:
@@ -139,27 +139,27 @@ def overlapFadeStarLoop():
             numStars = len(stars)
             keys = list(stars.keys())
 
-            for i in range(1):
-                randStar = keys[random.randint(0, numStars-1)]
-                currColor = stars[randStar]["currColor"]
-                fadeFactor = stars[randStar]["fadeFactor"]
-                flickerFactor = sum(fadeFactor) * 255 / 3
-                flickerFactor = random.randint(20, 30)
+            #for i in range(1):
+            randStar = keys[random.randint(0, numStars-1)]
+            currColor = stars[randStar]["currColor"]
+            fadeFactor = stars[randStar]["fadeFactor"]
+            flickerFactor = sum(fadeFactor) * 255 / 3
+            flickerFactor = random.randint(20, 30)
 
-                dir = stars[randStar]["flickerDir"]
-                # limit stars affected
-                if dir == 1:
-                    ff = flickerFactor
-                elif dir == -1:
-                    ff = -flickerFactor
-                else:
-                    ff = 0
+            dir = stars[randStar]["flickerDir"]
+            # limit stars affected
+            if dir == 1:
+                ff = flickerFactor
+            elif dir == -1:
+                ff = -flickerFactor
+            else:
+                ff = 0
 
-                stars[randStar]["currColor"][0] = max(0, min(MAX_BRIGHTNESS, math.floor(ff + currColor[0])))
-                stars[randStar]["currColor"][1] = max(0, min(MAX_BRIGHTNESS, math.floor(ff + currColor[1])))
-                stars[randStar]["currColor"][2] = max(0, min(MAX_BRIGHTNESS, math.floor(ff + currColor[2])))
+            stars[randStar]["currColor"][0] = maximin(math.floor(ff + currColor[0]))
+            stars[randStar]["currColor"][1] = maximin(math.floor(ff + currColor[1]))
+            stars[randStar]["currColor"][2] = maximin(math.floor(ff + currColor[2]))
 
-                stars[randStar]["flickerDir"] = -dir
+            stars[randStar]["flickerDir"] = -dir
 
 
         overlapShStarLoop()
@@ -169,17 +169,17 @@ def overlapFadeStarLoop():
             for star in stars.keys():
                 fadeFactor = stars[star]["fadeFactor"]
 
-                stars[star]["currColor"][0] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[0])))
-                stars[star]["currColor"][1] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[1])))
-                stars[star]["currColor"][2] = max(0, min(MAX_BRIGHTNESS, math.floor(starsLevel * fadeFactor[2])))
+                stars[star]["currColor"][0] = maximin(math.floor(starsLevel * fadeFactor[0]))
+                stars[star]["currColor"][1] = maximin(math.floor(starsLevel * fadeFactor[1]))
+                stars[star]["currColor"][2] = maximin(math.floor(starsLevel * fadeFactor[2]))
 
             for star in starsBuffer.keys():
                 invStarsLevel = max(0, min(MAX_BRIGHTNESS, starsLevelPeak - starsLevel))
                 fadeFactor = starsBuffer[star]["fadeFactor"]
 
-                starsBuffer[star]["currColor"][0] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[0]))
-                starsBuffer[star]["currColor"][1] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[1]))
-                starsBuffer[star]["currColor"][2] = min(MAX_BRIGHTNESS, math.floor(invStarsLevel * fadeFactor[2]))
+                starsBuffer[star]["currColor"][0] = maximin(math.floor(invStarsLevel * fadeFactor[0]))
+                starsBuffer[star]["currColor"][1] = maximin(math.floor(invStarsLevel * fadeFactor[1]))
+                starsBuffer[star]["currColor"][2] = maximin(math.floor(invStarsLevel * fadeFactor[2]))
 
             starsLevel -= SPEED
         else:
@@ -371,6 +371,9 @@ def genStars():
             }
 
             starCount += 1
+
+def maximin(val):
+    return max(0, min(MAX_BRIGHTNESS, val))
 
 def weightedRandom(vals, weights):
     arr = []
