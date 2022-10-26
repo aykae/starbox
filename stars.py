@@ -58,7 +58,7 @@ starsLevel = 0
 
 starsLevelPeak = 0
 peakStartTime = 0
-shineDelay = 5
+shineDelay = 10
 
 dx = 2
 dy = -1
@@ -139,12 +139,12 @@ def overlapFadeStarLoop():
             numStars = len(stars)
             keys = list(stars.keys())
 
-            for i in range(5):
+            for i in range(1):
                 randStar = keys[random.randint(0, numStars-1)]
                 currColor = stars[randStar]["currColor"]
                 fadeFactor = stars[randStar]["fadeFactor"]
                 flickerFactor = sum(fadeFactor) * 255 / 3
-                flickerFactor = random.randint(10, 25)
+                flickerFactor = random.randint(20, 30)
 
                 dir = stars[randStar]["flickerDir"]
                 # limit stars affected
