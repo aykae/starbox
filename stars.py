@@ -31,6 +31,7 @@ COLOR_DICT = {
     "LIGHT_BLUE":(204, 224, 255),
     #"CYAN2": (150, 204, 255),
     "LIGHT_PURPLE": (201, 170, 242),
+    "MID_PURPLE": (170, 127, 225),
     #"YELLOW": (255, 254, 166)
 }
 
@@ -350,8 +351,8 @@ def genStars():
 
             #randInd = random.randint(0, len(COLOR_DICT) - 1)
             randInd = weightedRandom(
-                [0, 1, 2],
-                [1, 1, 1]
+                [0, 1, 2, 3],
+                [3, 1, 1, 2]
             )
             baseColor = list(COLOR_DICT.values())[randInd]
             targetColor = tuple([int(randBrightness * i) for i in baseColor])
