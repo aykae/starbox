@@ -60,6 +60,7 @@ starsLevel = 0
 starsLevelPeak = 0
 peakStartTime = 0
 shineDelay = 10
+flickerTime = 0
 
 dx = 2
 dy = -1
@@ -101,7 +102,7 @@ def overlapFadeSetup():
 def overlapFadeStarLoop():
     global starCount, stars, starsBuffer, starsLevel, starsLevelPeak, shStarTrail
     global isFirstStars, isPeaking, isShining, isDimming, isShooting
-    global peakStartTime
+    global peakStartTime, flickerTime
 
     #Edge case for drawing first group of stars
     if isFirstStars:
@@ -140,27 +141,29 @@ def overlapFadeStarLoop():
             numStars = len(stars)
             keys = list(stars.keys())
 
-            #for i in range(1):
-            randStar = keys[random.randint(0, numStars-1)]
-            currColor = stars[randStar]["currColor"]
-            fadeFactor = stars[randStar]["fadeFactor"]
-            flickerFactor = sum(fadeFactor) * 255 / 3
-            flickerFactor = random.randint(20, 30)
+            for _ in range(0):
+            #if flickerTime == 0:
+                randStar = keys[random.randint(0, numStars-1)]
+                currColor = stars[randStar]["currColor"]
+                fadeFactor = stars[randStar]["fadeFactor"]
+                flickerFactor = random.randint(20, 30)
 
-            dir = stars[randStar]["flickerDir"]
-            # limit stars affected
-            if dir == 1:
-                ff = flickerFactor
-            elif dir == -1:
-                ff = -flickerFactor
-            else:
-                ff = 0
+                dir = stars[randStar]["flickerDir"]
+                # limit stars affected
+                if dir == 1:
+                    ff = flickerFactor
+                elif dir == -1:
+                    ff = -flickerFactor
+                else:
+                    ff = 0
 
-            stars[randStar]["currColor"][0] = maximin(math.floor(ff + currColor[0]))
-            stars[randStar]["currColor"][1] = maximin(math.floor(ff + currColor[1]))
-            stars[randStar]["currColor"][2] = maximin(math.floor(ff + currColor[2]))
+                stars[randStar]["currColor"][0] = maximin(math.floor(ff + currColor[0]))
+                stars[randStar]["currColor"][1] = maximin(math.floor(ff + currColor[1]))
+                stars[randStar]["currColor"][2] = maximin(math.floor(ff + currColor[2]))
 
-            stars[randStar]["flickerDir"] = -dir
+                stars[randStar]["flickerDir"] = -dir
+
+            #flickerTime = (flickerTime + 1) % 5
 
 
         overlapShStarLoop()
