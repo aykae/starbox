@@ -59,7 +59,7 @@ starsLevel = 0
 
 starsLevelPeak = 0
 peakStartTime = 0
-shineDelay = 10
+shineDelay = 5
 flickerTime = 0
 
 dx = 2
