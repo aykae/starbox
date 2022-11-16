@@ -9,6 +9,7 @@ SIM = False
 #DIM OF MATRIX
 WIDTH = 32
 HEIGHT = 32
+BORDER = 2
 
 #
 REFRESH = 30
@@ -58,24 +59,15 @@ def drawSparkles(colors):
         matrix.set_rgb(s[0], s[1], BG[0], BG[1], BG[2])
         sparkles.pop(s)
 
-    print(sparkles)
-
     for _ in range(SCOUNT):
-        x = random.randint(0, WIDTH-1)
-        y = random.randint(0, HEIGHT-1)
+        x = random.randint(BORDER, WIDTH-1-BORDER)
+        y = random.randint(BORDER, HEIGHT-1-BORDER)
 
         c = random.choice(colors)
 
-        print(img[x][y])
-        print(BG)
-        #if img[x][y] == BG and (x,y) not in sparkles.keys():
-        if img[x][y] == BG:
+        if sum(img[x][y]) == 0 and (x,y) not in sparkles.keys():
             matrix.set_rgb(x, y, c[0], c[1], c[2])
-            img[x][y] = c
             sparkles[(x,y)] = c
-
-    print(sparkles)
-    print()
 
 def setup():
     global img, filename, scolors
