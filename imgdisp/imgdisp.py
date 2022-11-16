@@ -89,7 +89,7 @@ def loop():
 
     matrix.clear()
     drawImg()
-    drawSparkles(scolors)
+    #drawSparkles(scolors)
     matrix.flip()
 
     time.sleep(REFRESH / 1000)

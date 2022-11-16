@@ -37,4 +37,4 @@ def generateImg(filename, output="img.txt"):
 
 #MAIN
 
-generateImg("img/final/greenbay.bmp")
+generateImg("img/final/greenbay-gc.bmp")
