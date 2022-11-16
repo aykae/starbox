@@ -38,10 +38,16 @@ else:
     matrix = hub75.Hub75(WIDTH, HEIGHT)
 
 def loadImg(f):
-    global img
+    global img, scolors
     filename = f
 
     with open(filename, "r") as file:
+        #Extract Two Sparkle Colors
+        sc1 = [int(c) for c in file.readline().strip().split(" ")]
+        sc2 = [int(c) for c in file.readline().strip().split(" ")]
+        scolors = [sc1, sc2]
+
+        #Extract Img Data
         for x in range(WIDTH):
             img.append([])
             for _ in range(HEIGHT):
@@ -70,12 +76,10 @@ def drawSparkles(colors):
             sparkles[(x,y)] = c
 
 def setup():
-    global img, filename, scolors
+    global img, filename
     matrix.start()
     loadImg("img.txt")
     drawImg()
-
-    scolors = [(255,255,255), (52,76,80)]
 
     matrix.flip()
 
