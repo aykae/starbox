@@ -29,10 +29,10 @@ else:
 COLOR_DICT = {
     "WHITE": (255, 255, 255),
     "LIGHT_BLUE":(204, 224, 255),
-    #"CYAN2": (150, 204, 255),
+    "BLUE":(111, 157, 225),
     "LIGHT_PURPLE": (201, 170, 242),
     "MID_PURPLE": (170, 127, 225),
-    #"YELLOW": (255, 254, 166)
+    "ORANGE": (255, 152, 100)
 }
 
 ################
@@ -83,7 +83,7 @@ shStarData = {}
 prevShStarTime = time.time_ns()
 shStarDelay = (10**9) * random.randint(SH_DELAY_LOW, SH_DELAY_HIGH)
 
-shStarColor = COLOR_DICT["LIGHT_BLUE"]
+shStarColor = COLOR_DICT["LIGHT_PURPLE"]
 
 
 ######################################
@@ -200,26 +200,6 @@ def overlapFadeStarLoop():
 
     overlapFadeDrawStars()
 
-def bezierFade(color):
-
-    r = color[0] / 255.0
-    b = color[1] / 255.0
-    g = color[2] / 255.0
-
-    rSq = r ** 2
-    rPara = rSq / (2.0 * (rSq - r) + 1.0)
-
-    rPara = 2.0 * r * (1.0 - r)
-
-
-    bSq = b ** 2
-    bPara = 2.0 * b * (1.0 - b)
-
-    gSq = g ** 2
-    gPara = 2.0 * g * (1.0 - g)
-    
-    return (rPara, bPara, gPara)
-
 def overlapShStarLoop():
     global shStarDelay, shStarData, shStarTrail, shStarColor, isShining, isShooting, peakStartTime
 
@@ -309,9 +289,6 @@ def drawShStars():
 
     matrix.flip()
 
-def constellationLoop():
-    pass
-
 def clearStars():
     global starCount, starsBuffer, stars, starsLevel, isPeaking, isDimming
 
@@ -352,12 +329,12 @@ def genStars():
                 [10, 8, 5, 4, 3, 2, 5]
             ) / 255.0
 
-            #randInd = random.randint(0, len(COLOR_DICT) - 1)
-            randInd = weightedRandom(
-                [0, 1, 2, 3],
-                [3, 1, 1, 2]
+            #ith element of first list is chosen with ith weight of second list
+            randColor = weightedRandom(
+                ["WHITE", "LIGHT_BLUE", "BLUE", "LIGHT_PURPLE", "MID_PURPLE", "ORANGE"],
+                [8, 5, 4, 5, 7, 1]
             )
-            baseColor = list(COLOR_DICT.values())[randInd]
+            baseColor = COLOR_DICT[randColor]
             targetColor = tuple([int(randBrightness * i) for i in baseColor])
             fadeFactor = (targetColor[0] / 255.0, targetColor[1] / 255.0, targetColor[2] / 255.0)
 
