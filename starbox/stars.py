@@ -83,7 +83,7 @@ shStarData = {}
 prevShStarTime = time.time_ns()
 shStarDelay = (10**9) * random.randint(SH_DELAY_LOW, SH_DELAY_HIGH)
 
-shStarColor = COLOR_DICT["LIGHT_PURPLE"]
+shStarColor = COLOR_DICT["MID_PURPLE"]
 
 
 ######################################
@@ -331,10 +331,16 @@ def genStars():
 
             #ith element of first list is chosen with ith weight of second list
             randColor = weightedRandom(
-                ["WHITE", "LIGHT_BLUE", "BLUE", "LIGHT_PURPLE", "MID_PURPLE", "ORANGE"],
-                [8, 5, 4, 5, 7, 1]
+                ["WHITE", "LIGHT_BLUE", "LIGHT_PURPLE", "MID_PURPLE"],
+                [8, 5, 5, 7]
             )
             baseColor = COLOR_DICT[randColor]
+
+            #chasemod rare red dwarf
+            if starCount == 0 and random.randint(0, 2) == 0:
+                baseColor = COLOR_DICT["ORANGE"]
+                randBrightness = random.choice([100, 150, 255]) / 255.0
+
             targetColor = tuple([int(randBrightness * i) for i in baseColor])
             fadeFactor = (targetColor[0] / 255.0, targetColor[1] / 255.0, targetColor[2] / 255.0)
 
