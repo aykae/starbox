@@ -1,7 +1,10 @@
 from PIL import Image
 import os
 
-def generateAni(dir, output="ani.txt"):
+INPUT = "img/final/palestine.bmp"
+OUTPUT = "flag-txt/img.txt"
+
+def generateAni(dir, output="flag-txt/ani.txt"):
     num_frames = len(os.listdir(dir))
     with open(output, "a") as file:
         file.write(str(num_frames) + "\n")
@@ -24,7 +27,7 @@ def generateAni(dir, output="ani.txt"):
                     color = list(pix[x,y])
                     file.write(" ".join(str(c) for c in color) + "\n")
 
-def generateImg(filename, output="img.txt"):
+def generateImg(filename, output=OUTPUT):
     im = Image.open(filename)
     im = im.convert('RGB')
     size = im.size
@@ -37,4 +40,4 @@ def generateImg(filename, output="img.txt"):
 
 #MAIN
 
-generateImg("img/final/dallas-gc.bmp")
+generateImg(INPUT)

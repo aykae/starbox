@@ -17,12 +17,14 @@ REFRESH = 30
 #
 BG = (0, 0, 0)
 
-SPARKLING = True
+SPARKLING = False
 SCOUNT = 20
 scolors = []
 sparkles = {}
+
 #
 filename = ""
+IMGNAME = "img.txt"
 
 #
 img = []
@@ -42,10 +44,11 @@ def loadImg(f):
     filename = f
 
     with open(filename, "r") as file:
-        #Extract Two Sparkle Colors
-        sc1 = [int(c) for c in file.readline().strip().split(" ")]
-        sc2 = [int(c) for c in file.readline().strip().split(" ")]
-        scolors = [sc1, sc2]
+        if SPARKLING:
+            #Extract Two Sparkle Colors
+            sc1 = [int(c) for c in file.readline().strip().split(" ")]
+            sc2 = [int(c) for c in file.readline().strip().split(" ")]
+            scolors = [sc1, sc2]
 
         #Extract Img Data
         for x in range(WIDTH):
@@ -57,7 +60,9 @@ def drawImg():
     for x in range(WIDTH):
         for y in range(HEIGHT):
             color = img[x][y]
-            if color != (0, 0, 0):
+            if sum(color) == 0:
+                matrix.set_rgb(x, y, 10, 10, 10)
+            else:
                 matrix.set_rgb(x, y, color[0], color[1], color[2])
 
 def drawSparkles(colors):
@@ -78,7 +83,7 @@ def drawSparkles(colors):
 def setup():
     global img, filename
     matrix.start()
-    loadImg("img.txt")
+    loadImg(IMGNAME)
     drawImg()
 
     matrix.flip()
@@ -89,7 +94,10 @@ def loop():
 
     matrix.clear()
     drawImg()
-    #drawSparkles(scolors)
+
+    if SPARKLING:
+        drawSparkles(scolors)
+
     matrix.flip()
 
     time.sleep(REFRESH / 1000)
