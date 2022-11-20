@@ -1,8 +1,8 @@
 from PIL import Image
 import os
 
-INPUT = "img/final/palestine.bmp"
-OUTPUT = "flag-txt/img.txt"
+INPUT = "img/final/usa.bmp"
+OUTPUT = "img.txt"
 
 def generateAni(dir, output="flag-txt/ani.txt"):
     num_frames = len(os.listdir(dir))
