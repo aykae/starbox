@@ -1,7 +1,7 @@
 from PIL import Image
 import os
 
-INPUT = "final/logs.bmp"
+INPUT = "final/fire.bmp"
 OUTPUT = "img.txt"
 
 def generateAni(dir, output="flag-txt/ani.txt"):

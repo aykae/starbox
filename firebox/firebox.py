@@ -31,15 +31,21 @@ else:
     import hub75
     matrix = hub75.Hub75(WIDTH, HEIGHT)
 
-def genFireshape():
-    fw = 16
-    fh = 16
-    fxoffset = (WIDTH - fw) // 2
-    fyoffset = (HEIGHT - fh) // 2 + 5
-    for x in range(fxoffset, fxoffset + fw):
-        for y in range(fyoffset, fyoffset + fh):
-            fireshape.append((x,y))
-
+def genFireshape(filename):
+    # fw = 16
+    # fh = 16
+    # fxoffset = (WIDTH - fw) // 2
+    # fyoffset = (HEIGHT - fh) // 2 + 5
+    # for x in range(fxoffset, fxoffset + fw):
+    #     for y in range(fyoffset, fyoffset + fh):
+    #         fireshape.append((x,y))
+    with open(filename, "r") as file:
+        for x in range(WIDTH):
+            for y in range(HEIGHT):
+                color = [int(c) for c in file.readline().strip().split(" ")]
+                if sum(color) > 0:
+                    #store position but not color
+                    fireshape.append((x,y))
 
 def genFire():
     fcolors = {
@@ -71,14 +77,12 @@ def loadLogs(filename):
                 if sum(color) > 0:
                     logs[(x,y)] = color
 
-
 def drawLogs():
     global logs
 
     for k in logs.keys():
         color = logs[k]
         matrix.set_rgb(k[0], k[1], color[0], color[1], color[2])
-
 
 def setup():
     global ani, frame, frameCount
@@ -87,18 +91,8 @@ def setup():
     loadLogs("logs.txt")
     drawLogs()
 
-    genFireshape()
+    genFireshape("fireshape.txt")
     genFire()
-
-    # with open("ani.txt", "r") as file:
-    #     for _ in range(frameCount):
-    #         for x in range(WIDTH):
-    #             ani.append([])
-    #             for y in range(HEIGHT):
-    #                 color = [int(c) for c in file.readline().strip().split(" ")]
-    #                 ani[x].append(color)
-
-
 
 def loop():
     global ani, frame, frameCount
