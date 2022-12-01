@@ -22,10 +22,6 @@ logs = {}
 #list of frame dictionaries mapping pixels to colors
 ani = []
 
-#list of smoke objects: [position, color]
-smoke = []
-SMOKE_COLOR = (50, 50, 50)
-
 #
 frame = 0
 frameCount = 0
@@ -91,32 +87,6 @@ def drawLogs():
         color = logs[k]
         matrix.set_rgb(k[0], k[1], color[0], color[1], color[2])
 
-def generateSmoke():
-    global smoke
-    #dict of gray smoke pixels that quickly float upward
-    #randomly generate a couple particles every couple frames
-
-    if random.randint(0, 10) == 5:
-        smoke.append([random.randint(5, 31), 16], SMOKE_COLOR)
-
-
-def drawSmoke():
-    global smoke
-    #move smoke upwards and variably to the left and right by 1 pixel
-    #delete from smoke dict once out of sight
-
-    for s in smoke:
-        matrix.set_rgb(s[0][0], s[0][1], 0, 0, 0)
-
-        s[0][1] -= 2
-
-        if s[0][1] > HEIGHT - 1 or s[0][1] < 0:
-            smoke.remove(s)
-        else:
-            matrix.set_rgb(s[0][0], s[0][1], s[1][0], s[1][1], s[1][2])
-    
-
-
 def loadFireFromAni(filename):
     global ani
 
@@ -138,27 +108,35 @@ def loadFireFromAni(filename):
 def drawFireFromAni():
     global ani, frame
 
-    f = ani[frame]
-    for p in f.keys():
-        c = f[pixel]
-        matrix.set_rgb(p[0], p[1], c[0], c[1], c[2])
+    for f in ani:
+        for p in f.keys():
+            c = f[pixel]
+            matrix.set_rgb(p[0], p[1], c[0], c[1], c[2])
             
+        time.sleep(REFRESH / 1000.0)
+
+
 def setup():
     global ani, frame, frameCount
     matrix.start()
 
+    # loadLogs("logs.txt")
+    # drawLogs()
+
+    # genFireshape("fireshape.txt")
+    # genFire()
+
     loadFireFromAni("ani.txt")
-    frameCount = len(ani)
-    frame = 0
 
 def loop():
     global ani, frame, frameCount
 
-    drawFireFromAni()
+    drawFire()
+    drawLogs()
     matrix.flip()
-    time.sleep(REFRESH / 1000.0)
 
-    frame = (frame + 1) % frameCount
+    genFire()
+
 
 ##############
 # MAIN LOOP
