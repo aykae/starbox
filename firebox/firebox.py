@@ -154,6 +154,8 @@ def setup():
 def loop():
     global ani, frame, frameCount
 
+    generateSmoke()
+    drawSmoke()
     drawFireFromAni()
     matrix.flip()
     time.sleep(REFRESH / 1000.0)
