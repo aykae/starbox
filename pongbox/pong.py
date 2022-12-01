@@ -3,14 +3,14 @@ import time, random, math
 ################
 #MATRIX VARS
 ################
-SIM = False
+SIM = True
 
 #DIM OF MATRIX
 WIDTH = 32
 HEIGHT = 32
 
 #
-REFRESH = 50
+REFRESH = 0
 
 #
 barrier = []

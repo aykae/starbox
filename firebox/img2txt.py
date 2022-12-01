@@ -4,7 +4,12 @@ import os
 INPUT = "final/fire.bmp"
 OUTPUT = "img.txt"
 
-def generateAni(dir, output="flag-txt/ani.txt"):
+
+#CREATES A SINGLE ANIMATION FILES THAT IS LIGHTWEIGHT AND EFFICIENT
+#DON'T STORE NOR REDRAW REDUNDENCIES or BLACK PIXELS
+#MAYBE DON'T EVEN DRAW LOGS (using a darkness threshold check e.g. > 700 (brown))
+
+def generateAni(dir, output="ani.txt"):
     num_frames = len(os.listdir('frames'))
     with open("ani.txt", "a") as file:
         file.write(str(num_frames) + "\n")

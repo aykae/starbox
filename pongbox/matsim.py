@@ -68,6 +68,17 @@ class MatrixSim:
 
     def flip(self):
         self.display.flip()
+    
+    def clear(self):
+        color = pygame.Color(0, 0, 0)
+        for y in range(self.matrix_height):
+            for x in range(self.matrix_width):
+                dx = x * (self.PIXEL_SIZE + self.PIXEL_SPACING) + self.X_OFFSET
+                dy = y * (self.PIXEL_SIZE + self.PIXEL_SPACING) + self.Y_OFFSET
+                for py in range(self.PIXEL_SIZE):
+                    for px in range(self.PIXEL_SIZE):
+                        self.window.set_at((dx + px, dy + py), color)
+
 
 
 # while running:

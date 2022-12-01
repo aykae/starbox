@@ -4,7 +4,7 @@ import json
 ################
 #MATRIX VARS
 ################
-SIM = False
+SIM = True
 
 #DIM OF MATRIX
 WIDTH = 32
