@@ -46,7 +46,7 @@ def generateAni(dir, output):
             prevdict = currdict
             currdict = {}
             #denote end of frame 
-            file.write("FRAME\n")
+            file.write("-1\n")
 
 def generateImg(filename, output=OUTPUT):
     im = Image.open(filename)

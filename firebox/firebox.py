@@ -4,7 +4,7 @@ import json
 ################
 #MATRIX VARS
 ################
-SIM = True
+SIM = False
 
 #DIM OF MATRIX
 WIDTH = 32
@@ -120,28 +120,31 @@ def drawSmoke():
 def loadFireFromAni(filename):
     global ani
 
+    ani.append({})
     ani_index = 0
     with open(filename, "r") as file:
-        line = file.readline().strip().split(' ')
-        if line[0] == "FRAME":
-            ani.append({})
-            ani_index += 1
-        else:
-            px = line[0]
-            py = line[1]
-            r = line[2]
-            g = line[3]
-            b = line[4]
+        for line in file.readlines():
+            print(ani_index)
+            line = line.strip().split(' ')
+            if line[0] == "-1":
+                ani.append({})
+                ani_index += 1
+            else:
+                px = line[0]
+                py = line[1]
+                r = line[2]
+                g = line[3]
+                b = line[4]
 
-            ani[ani_index][(px, py)] = (r, g, b)
+                ani[ani_index][(px, py)] = (r, g, b)
 
 def drawFireFromAni():
     global ani, frame
 
     f = ani[frame]
     for p in f.keys():
-        c = f[pixel]
-        matrix.set_rgb(p[0], p[1], c[0], c[1], c[2])
+        c = f[p]
+        matrix.set_rgb(int(p[0]), int(p[1]), int(c[0]), int(c[1]), int(c[2]))
             
 def setup():
     global ani, frame, frameCount
@@ -154,11 +157,11 @@ def setup():
 def loop():
     global ani, frame, frameCount
 
-    generateSmoke()
-    drawSmoke()
+    #generateSmoke()
+    #drawSmoke()
     drawFireFromAni()
     matrix.flip()
-    time.sleep(REFRESH / 1000.0)
+    #time.sleep(REFRESH / 1000.0)
 
     frame = (frame + 1) % frameCount
 
