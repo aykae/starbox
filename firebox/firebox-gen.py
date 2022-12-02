@@ -4,7 +4,7 @@ import json
 ################
 #MATRIX VARS
 ################
-SIM = True
+SIM = False 
 
 #DIM OF MATRIX
 WIDTH = 32
@@ -120,13 +120,11 @@ def setup():
     global ani, frame, frameCount
     matrix.start()
 
-    # loadLogs("logs.txt")
-    # drawLogs()
+    loadLogs("logs.txt")
+    drawLogs()
 
-    # genFireshape("fireshape.txt")
-    # genFire()
-
-    loadFireFromAni("ani.txt")
+    genFireshape("fireshape.txt")
+    genFire()
 
 def loop():
     global ani, frame, frameCount
