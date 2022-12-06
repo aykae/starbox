@@ -26,8 +26,8 @@ def generateAni(dir, output):
     # generating color palette
     with open(output, "a") as file:
         for filename in os.listdir(dir):
-            im = image.open(dir + "/" + filename)
-            im = im.convert('rgb')
+            im = Image.open(dir + "/" + filename)
+            im = im.convert('RGB')
             size = im.size
             pix = im.load()
 
@@ -41,11 +41,13 @@ def generateAni(dir, output):
                         file.write(cstr + " " + str(paletteindex) + "\n")
                         paletteindex += 1
 
+        #marks end of palette
+        file.write("P\n")
 
     with open(output, "a") as file:
         for filename in os.listdir(dir):
-            im = image.open(dir + "/" + filename)
-            im = im.convert('rgb')
+            im = Image.open(dir + "/" + filename)
+            im = im.convert('RGB')
             size = im.size
             pix = im.load()
 
@@ -56,16 +58,17 @@ def generateAni(dir, output):
                     arr[x].append(pix[x, y])
 
                 for x in range(size[0]):
+                    file.write(str(x) + "\n")
                     for y in range(size[1]):
                         if sum(pix[x,y]) > sum(BLACK_THRESH):
                             if prevdict.get((x,y)) is None or (prevdict.get((x,y)) and prevdict.get((x,y)) != pix[x,y]):
                                 currdict[(x,y)] = pix[x,y]
 
-                                pstr = str(x) + " " + str(y) + " "
+                                ystr = str(y) + " "
                                 color = list(pix[x,y])
                                 cstr = " ".join(str(c) for c in color)
                                 cindex = palette[cstr]
-                                file.write(pstr + str(cindex) + "\n")
+                                file.write(ystr + str(cindex) + "\n")
 
                 prevdict = currdict
                 currdict = {}
