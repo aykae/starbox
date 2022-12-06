@@ -21,6 +21,7 @@ logs = {}
 
 #list of frame dictionaries mapping pixels to colors
 ani = []
+palette = {}
 
 #list of smoke objects: [position, color]
 smoke = []
@@ -115,6 +116,17 @@ def drawSmoke():
         else:
             matrix.set_rgb(s[0][0], s[0][1], s[1][0], s[1][1], s[1][2])
     
+def loadPaletteFromAni(filename):
+    global palette
+
+    with open(filename, "r") as file:
+        for line in file.readlines():
+            if line.strip() == "P":
+                break
+            else:
+                data = [int(i) for i in line.strip().split(" ")]
+                color = (data[0], data[1], data[2])
+                palette[color] = data[3]
 
 
 def loadFireFromAni(filename):

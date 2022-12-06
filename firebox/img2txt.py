@@ -10,6 +10,11 @@ BLACK_THRESH = (25, 25, 25)
 #DON'T STORE NOR REDRAW REDUNDENCIES or BLACK PIXELS
 #MAYBE DON'T EVEN DRAW LOGS (using a darkness threshold check e.g. > 700 (brown))
 
+#FILE BEGINS WITH COLOR PALETTE (ENDS W/ P)
+#THEN EACH X VALUES OF A FRAME IS ENUMERATED (ENDS W/ X)
+    #EVERY Y w/ COLOR VAL IS LISTED
+#REPEATED FOR EACH FRAME (ENDS W/ F)
+
 def generateAni(dir, output):
     #clear output file
     with open(output, "w") as file:
@@ -51,29 +56,23 @@ def generateAni(dir, output):
             size = im.size
             pix = im.load()
 
-            arr = []
             for x in range(size[0]):
-                arr.append([])
+                file.write(str(x) + "\n")
                 for y in range(size[1]):
-                    arr[x].append(pix[x, y])
+                    if sum(pix[x,y]) > sum(BLACK_THRESH):
+                        if prevdict.get((x,y)) is None or (prevdict.get((x,y)) and prevdict.get((x,y)) != pix[x,y]):
+                            currdict[(x,y)] = pix[x,y]
 
-                for x in range(size[0]):
-                    file.write(str(x) + "\n")
-                    for y in range(size[1]):
-                        if sum(pix[x,y]) > sum(BLACK_THRESH):
-                            if prevdict.get((x,y)) is None or (prevdict.get((x,y)) and prevdict.get((x,y)) != pix[x,y]):
-                                currdict[(x,y)] = pix[x,y]
-
-                                ystr = str(y) + " "
-                                color = list(pix[x,y])
-                                cstr = " ".join(str(c) for c in color)
-                                cindex = palette[cstr]
-                                file.write(ystr + str(cindex) + "\n")
-
-                prevdict = currdict
-                currdict = {}
-                #denote end of frame 
+                            ystr = str(y) + " "
+                            color = list(pix[x,y])
+                            cstr = " ".join(str(c) for c in color)
+                            cindex = palette[cstr]
+                            file.write(ystr + str(cindex) + "\n")
                 file.write("X\n")
+
+            prevdict = currdict
+            currdict = {}
+            #denote end of frame 
 
 def generateImg(filename, output=OUTPUT):
     im = Image.open(filename)
