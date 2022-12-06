@@ -27,7 +27,13 @@ palette = {}
 smoke = []
 SMOKE_COLOR = (50, 50, 50)
 
-#
+#line in the ani file where pixel map begins
+pixelStart = 0
+
+#current line in ani file
+currLine = 0
+
+#frames
 frame = 0
 frameCount = 0
 
@@ -39,40 +45,6 @@ else:
     import hub75
     matrix = hub75.Hub75(WIDTH, HEIGHT)
 
-def genFireshape(filename):
-    # fw = 16
-    # fh = 16
-    # fxoffset = (WIDTH - fw) // 2
-    # fyoffset = (HEIGHT - fh) // 2 + 5
-    # for x in range(fxoffset, fxoffset + fw):
-    #     for y in range(fyoffset, fyoffset + fh):
-    #         fireshape.append((x,y))
-    with open(filename, "r") as file:
-        for x in range(WIDTH):
-            for y in range(HEIGHT):
-                color = [int(c) for c in file.readline().strip().split(" ")]
-                if sum(color) > 0:
-                    #store position but not color
-                    fireshape.append((x,y))
-
-def genFire():
-    fcolors = {
-        # "WHITE": (255, 255, 255),
-        "DARK_ORANGE": (230, 54, 19),
-        "LIGHT_ORANGE": (237, 109, 25),
-        "DARK_YELLOW": (248, 191, 34),
-        "RED_ORANGE": (227, 27, 16)
-    }
-
-    for f in fireshape:
-        fire[f] = random.choice(list(fcolors.values()))
-
-def drawFire():
-    global fire
-
-    for k in fire.keys():
-        color = fire[k]
-        matrix.set_rgb(k[0], k[1], color[0], color[1], color[2])
 
 def loadLogs(filename):
     with open(filename, "r") as file:
@@ -117,46 +89,26 @@ def drawSmoke():
             matrix.set_rgb(s[0][0], s[0][1], s[1][0], s[1][1], s[1][2])
     
 def loadAniData(filename):
-    global palette, frameCount
+    global palette, frameCount, currLine, pixelStart
 
     frameCount = 0
 
     with open(filename, "r") as file:
         for line in file.readlines():
+            currLine += 1
             if line.strip() == "P":
+                pixelStart = currLine
                 break
             else:
                 data = [int(i) for i in line.strip().split(" ")]
                 color = (data[0], data[1], data[2])
-                palette[color] = data[3]
+                cindex = data[3]
+                palette[cindex] = color
 
         for line in file.readlines():
             if line.strip() == "F":
                 frameCount += 1
 
-
-
-
-def loadFireFromAni(filename):
-    global ani
-
-    ani.append({})
-    ani_index = 0
-    with open(filename, "r") as file:
-        for line in file.readlines():
-            print(ani_index)
-            line = line.strip().split(' ')
-            if line[0] == "-1":
-                ani.append({})
-                ani_index += 1
-            else:
-                px = line[0]
-                py = line[1]
-                r = line[2]
-                g = line[3]
-                b = line[4]
-
-                ani[ani_index][(px, py)] = (r, g, b)
 
 def drawFireFromAni(filename):
     global ani, frame
@@ -175,13 +127,34 @@ def setup():
 
     frame = 0
 
-def loop():
-    global ani, frame, frameCount
+def drawFrame(flines):
+    global palette, frame, frameCount, currLine
 
-    drawFireFromAni()
+    #reset animation
+    if frame == 0:
+        currLine = pixelStart
+
+    line = flines[currLine].strip()
+    while line != "F":
+        x = int(line)
+        y = -1
+        
+        currLine += 1
+        line = flines[currLine].strip()
+        while line != "X":
+            line = line.split(' ')
+            y = int(line[0])
+            c = palette[int(line[1])]
+
+            #draw pixel
+            matrix.set_rgb(x, y, c[0], c[1], c[2])
+
+            #increment line
+            currLine += 1
+            line = flines[currLine].strip()
+
     matrix.flip()
     #time.sleep(REFRESH / 1000.0)
-
     frame = (frame + 1) % frameCount
 
 ##############
@@ -189,5 +162,7 @@ def loop():
 ##############
 
 setup()
-while True:
-    loop()
+with open("ani.txt") as file:
+    lines = file.readlines()
+    while True:
+        drawFrame(lines)
