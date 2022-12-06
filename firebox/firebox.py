@@ -116,8 +116,10 @@ def drawSmoke():
         else:
             matrix.set_rgb(s[0][0], s[0][1], s[1][0], s[1][1], s[1][2])
     
-def loadPaletteFromAni(filename):
-    global palette
+def loadAniData(filename):
+    global palette, frameCount
+
+    frameCount = 0
 
     with open(filename, "r") as file:
         for line in file.readlines():
@@ -127,6 +129,12 @@ def loadPaletteFromAni(filename):
                 data = [int(i) for i in line.strip().split(" ")]
                 color = (data[0], data[1], data[2])
                 palette[color] = data[3]
+
+        for line in file.readlines():
+            if line.strip() == "F":
+                frameCount += 1
+
+
 
 
 def loadFireFromAni(filename):
@@ -150,27 +158,26 @@ def loadFireFromAni(filename):
 
                 ani[ani_index][(px, py)] = (r, g, b)
 
-def drawFireFromAni():
+def drawFireFromAni(filename):
     global ani, frame
 
-    f = ani[frame]
-    for p in f.keys():
-        c = f[p]
-        matrix.set_rgb(int(p[0]), int(p[1]), int(c[0]), int(c[1]), int(c[2]))
+    with open(filename, "r") as file:
+        pass
+
+    matrix.set_rgb(int(p[0]), int(p[1]), int(c[0]), int(c[1]), int(c[2]))
             
 def setup():
     global ani, frame, frameCount
     matrix.start()
 
-    loadFireFromAni("ani.txt")
-    frameCount = len(ani)
+    #loads color palette and frame count from file
+    loadAniData("ani.txt")
+
     frame = 0
 
 def loop():
     global ani, frame, frameCount
 
-    #generateSmoke()
-    #drawSmoke()
     drawFireFromAni()
     matrix.flip()
     #time.sleep(REFRESH / 1000.0)
