@@ -11,7 +11,7 @@ WIDTH = 32
 HEIGHT = 32
 
 #
-REFRESH = 50
+REFRESH = 20
 
 #
 fireshape = []
@@ -88,47 +88,36 @@ def drawSmoke():
         else:
             matrix.set_rgb(s[0][0], s[0][1], s[1][0], s[1][1], s[1][2])
     
-def loadAniData(filename):
+def loadAniData(flines):
     global palette, frameCount, currLine, pixelStart
-
+    pixelStart = 0
     frameCount = 0
 
-    with open(filename, "r") as file:
-        for line in file.readlines():
-            currLine += 1
-            if line.strip() == "P":
-                pixelStart = currLine
-                break
-            else:
-                data = [int(i) for i in line.strip().split(" ")]
-                color = (data[0], data[1], data[2])
-                cindex = data[3]
-                palette[cindex] = color
+    frameCount = int(flines[0].strip().split(" ")[0])
+    currLine = 1
 
-        for line in file.readlines():
-            if line.strip() == "F":
-                frameCount += 1
+    for line in flines[1:]:
+        currLine += 1
+        if line.strip() == "P":
+            pixelStart = currLine
+            break
+        elif pixelStart <= 0: #still reading palette
+            data = [int(i) for i in line.strip().split(" ")]
+            color = (data[0], data[1], data[2])
+            cindex = data[3]
+            palette[cindex] = color
 
 
-def drawFireFromAni(filename):
-    global ani, frame
-
-    with open(filename, "r") as file:
-        pass
-
-    matrix.set_rgb(int(p[0]), int(p[1]), int(c[0]), int(c[1]), int(c[2]))
-            
-def setup():
-    global ani, frame, frameCount
+def setup(flines):
+    global ani, frame, frameCount, currLine, pixelStart
     matrix.start()
 
     #loads color palette and frame count from file
-    loadAniData("ani.txt")
-
+    loadAniData(flines)
     frame = 0
 
 def drawFrame(flines):
-    global palette, frame, frameCount, currLine
+    global palette, frame, frameCount, currLine, pixelStart
 
     #reset animation
     if frame == 0:
@@ -153,16 +142,21 @@ def drawFrame(flines):
             currLine += 1
             line = flines[currLine].strip()
 
+        currLine += 1
+        line = flines[currLine].strip()
+
+    currLine += 1
     matrix.flip()
-    #time.sleep(REFRESH / 1000.0)
     frame = (frame + 1) % frameCount
 
 ##############
 # MAIN LOOP
 ##############
 
-setup()
 with open("ani.txt") as file:
     lines = file.readlines()
+    setup(lines)
     while True:
+        #matrix.clear()
         drawFrame(lines)
+        time.sleep(REFRESH / 1000.0)

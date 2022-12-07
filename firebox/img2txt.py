@@ -18,7 +18,8 @@ BLACK_THRESH = (25, 25, 25)
 def generateAni(dir, output):
     #clear output file
     with open(output, "w") as file:
-        pass
+        numFrames = len(os.listdir(dir))
+        file.write(str(numFrames) + " FRAMES\n")
 
     #dicts used to prevent redundant pixel redraws
     prevdict = {}
@@ -69,6 +70,7 @@ def generateAni(dir, output):
                             cindex = palette[cstr]
                             file.write(ystr + str(cindex) + "\n")
                 file.write("X\n")
+            file.write("F\n")
 
             prevdict = currdict
             currdict = {}
