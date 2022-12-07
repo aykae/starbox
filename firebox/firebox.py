@@ -144,7 +144,6 @@ def drawFrame(flines):
         line = flines[currLine].strip()
 
     currLine += 1
-    matrix.flip()
     frame = (frame + 1) % frameCount
 
 ##############
@@ -156,7 +155,10 @@ lines = []
 with open("ani.txt") as file:
     lines = file.readlines()
 
+loadLogs("logs.txt")
 setup(lines)
 while True:
     drawFrame(lines)
+    drawLogs()
+    matrix.flip()
     #time.sleep(REFRESH / 1000.0)
