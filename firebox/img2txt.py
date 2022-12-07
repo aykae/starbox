@@ -1,8 +1,8 @@
 from PIL import Image
 import os
 
-INPUT = "final/fire-ani"
-OUTPUT = "data/ani.txt"
+INPUT = "final/fire-ani-3"
+OUTPUT = "data/ani3.txt"
 
 BLACK_THRESH = (25, 25, 25)
 
@@ -40,6 +40,9 @@ def generateAni(dir, output):
             for x in range(size[0]):
                 for y in range(size[1]):
                     color = list(pix[x,y])
+                    # if sum(color) < sum(BLACK_THRESH):
+                    #     color = (0, 0, 0)
+
                     cstr = " ".join(str(c) for c in color)
 
                     if cstr not in palette.keys():
@@ -60,8 +63,9 @@ def generateAni(dir, output):
             for x in range(size[0]):
                 file.write(str(x) + "\n")
                 for y in range(size[1]):
+                    # if prevdict.get((x,y)) is None or prevdict.get((x,y)) != pix[x,y]:
                     if sum(pix[x,y]) > sum(BLACK_THRESH):
-                        if prevdict.get((x,y)) is None or (prevdict.get((x,y)) and prevdict.get((x,y)) != pix[x,y]):
+                        if prevdict.get((x,y)) is None or (prevdict.get((x,y)) != pix[x,y]):
                             currdict[(x,y)] = pix[x,y]
 
                             ystr = str(y) + " "

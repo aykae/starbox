@@ -110,8 +110,6 @@ def loadAniData(flines):
 
 def setup(flines):
     global ani, frame, frameCount, currLine, pixelStart
-    matrix.start()
-
     #loads color palette and frame count from file
     loadAniData(flines)
     frame = 0
@@ -152,11 +150,13 @@ def drawFrame(flines):
 ##############
 # MAIN LOOP
 ##############
+matrix.start()
 
+lines = []
 with open("ani.txt") as file:
     lines = file.readlines()
-    setup(lines)
-    while True:
-        #matrix.clear()
-        drawFrame(lines)
-        time.sleep(REFRESH / 1000.0)
+
+setup(lines)
+while True:
+    drawFrame(lines)
+    #time.sleep(REFRESH / 1000.0)
