@@ -1,0 +1,8 @@
+DON'T STORE FURNACE, DRAW STRAIGHT FROM FILE (is that any different, memory-wise?)
+
+____________________________
+CUT OUT OVERLAY OF FURNACE
+
+RANDOMIZE FIRE PIXELS UNDER FURNACE IN A SMALL RECTANGLE (or maybe even the exact shape of the fire, which can be calculated the same way you calculated fireshape)
+
+EITHER FADE PIXELS IN AND OUT, OR REGENERATE PATTERNS OF RED/ORANGE/YELLOW. MAYBE EVEN BOTH!

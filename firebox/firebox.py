@@ -53,7 +53,7 @@ def loadLogs(filename):
             for y in range(HEIGHT):
                 color = [int(c) for c in file.readline().strip().split(" ")]
 
-                #soring black is redundant
+                #storing black is redundant
                 if sum(color) > 0:
                     logs[(x,y)] = color
 
@@ -154,6 +154,10 @@ matrix.start()
 lines = []
 with open("ani.txt") as file:
     lines = file.readlines()
+
+# loglines = []
+# with open("logs.txt") as file:
+#     loglines = file.readlines()
 
 loadLogs("logs.txt")
 setup(lines)
