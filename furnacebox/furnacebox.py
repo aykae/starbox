@@ -23,6 +23,10 @@ fireshape = []
 firePalette = []
 fire = {}
 
+br = 255
+fireDir = 1
+FIRE_INC = 80
+
 furnacePalette = []
 furnace = {}
 
@@ -88,7 +92,7 @@ def loadFurnace(filename):
 
         currLine += 1
         line = lines[currLine].strip()
-        while currLine != "":
+        while line != "F":
             x = int(line)
             y = -1
             
@@ -97,11 +101,14 @@ def loadFurnace(filename):
             while line != "X":
                 line = line.split(' ')
                 y = int(line[0])
-                c = int(line[1])
+                c = furnacePalette[int(line[1])]
 
-                #store pixel
-                fkey = str(x) + " " + str(y)
-                furnace[fkey] = c
+                #DEPR: store pixel
+                # fkey = str(x) + " " + str(y)
+                # furnace[fkey] = c
+
+                #draw pixel
+                matrix.set_rgb(x, y, c[0], c[1], c[2])
 
                 #increment line
                 currLine += 1
@@ -111,7 +118,7 @@ def loadFurnace(filename):
             line = lines[currLine].strip()
 
 def drawFurnace():
-    global furnace, furnaePalette
+    global furnace, furnacePalette
 
     if len(furnace) <= 0:
         return
@@ -122,12 +129,76 @@ def drawFurnace():
         x, y = pixel.strip().split(" ")
         matrix.set_rgb(x, y, c[0], c[1], c[2])
     
+def loadFire(filename):
+    global fire, firePalette
+    
+    currLine = 0
+    with open(filename, "r") as file:
+        lines = file.readlines()
+        line = lines[currLine].strip()
+        while line != "P":
+            # print(line)
+            data = [int(i) for i in line.split(" ")]
+            color = (data[0], data[1], data[2])
+            firePalette.append(color)
+
+            currLine += 1
+            line = lines[currLine].strip()
+
+        currLine += 1
+        line = lines[currLine].strip()
+        while line != "F":
+            x = int(line)
+            y = -1
+            
+            currLine += 1
+            line = lines[currLine].strip()
+            while line != "X":
+                line = line.split(' ')
+                y = int(line[0])
+                c = int(line[1])
+
+                #DEPR: store pixel
+                fkey = str(x) + " " + str(y)
+                fire[fkey] = c
+
+                # #draw pixel
+                # matrix.set_rgb(x, y, c[0], c[1], c[2])
+
+                #increment line
+                currLine += 1
+                line = lines[currLine].strip()
+
+            currLine += 1
+            line = lines[currLine].strip()
+
+def drawFire():
+    global fire, firePalette, br, fireDir
+
+    if len(fire) <= 0:
+        return
+
+    for pixel in fire.keys():
+        cindex = fire[pixel]
+        c = firePalette[cindex]
+        x, y = pixel.strip().split(" ")
+        bfactor = br / 255.0
+        matrix.set_rgb(int(x), int(y), int(bfactor*c[0]), int(bfactor*c[1]), int(bfactor*c[2]))
+        #matrix.set_rgb(int(x), int(y), int(c[0]), int(c[1]), int(c[2]))
+
+    br += FIRE_INC * fireDir
+    if br >= 255:
+        br = 255
+        fireDir *= -1
+    elif br <= 0:
+        br = 0
+        fireDir *= -1
 
 def setup():
     global ani, currLine, pixelStart
     #loads color palette and frame count from file
     loadFurnace(FURNACE_FILE)
-    #loadFire(FIRE_FILE)
+    loadFire(FIRE_FILE)
 
 def drawFrame(flines):
     global palette, frame, frameCount, currLine, pixelStart
@@ -171,6 +242,6 @@ matrix.start()
 
 setup()
 while True:
-    drawFurnace()
+    drawFire()
     matrix.flip()
     #time.sleep(REFRESH / 1000.0)

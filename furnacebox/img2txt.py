@@ -4,8 +4,8 @@ import os
 # INPUT = "final/stills/furnace.bmp"
 # OUTPUT = "data/furnace.txt"
 
-INPUT = "final/stills/furnace.bmp"
-OUTPUT = "data/furnace.txt"
+INPUT = "final/stills/fire.bmp"
+OUTPUT = "data/fire.txt"
 
 BLACK = (0, 0, 0)
 
@@ -184,6 +184,7 @@ def generateImg(filename, output):
                     file.write(ystr + str(cindex) + "\n")
 
             file.write("X\n")
+        file.write("F\n")
 
 def generateImgIneff(filename, output=OUTPUT):
     im = Image.open(filename)
