@@ -21,6 +21,7 @@ FIRE_FILE = "fire.txt"
 fireshape = []
 
 firePalette = []
+fireShape = []
 fire = {}
 
 br = 255
@@ -83,7 +84,6 @@ def loadFurnace(filename):
         lines = file.readlines()
         line = lines[currLine].strip()
         while line != "P":
-            # print(line)
             data = [int(i) for i in line.split(" ")]
             color = (data[0], data[1], data[2])
             furnacePalette.append(color)
@@ -131,7 +131,7 @@ def drawFurnace():
         matrix.set_rgb(x, y, c[0], c[1], c[2])
     
 def loadFire(filename):
-    global fire, firePalette
+    global fire, fireShape, firePalette
     
     currLine = 0
     with open(filename, "r") as file:
@@ -162,9 +162,8 @@ def loadFire(filename):
                 #DEPR: store pixel
                 fkey = str(x) + " " + str(y)
                 fire[fkey] = c
+                fireShape.append((x,y))
 
-                # #draw pixel
-                # matrix.set_rgb(x, y, c[0], c[1], c[2])
 
                 #increment line
                 currLine += 1
@@ -172,6 +171,22 @@ def loadFire(filename):
 
             currLine += 1
             line = lines[currLine].strip()
+
+def compressFireShape():
+    global fireShape
+
+    fireIndex = 0
+    compFireShape = []
+    while fireIndex < len(fireShape):
+        compFireShape.append(fireShape[fireIndex])
+        (x, y) = fireShape[fireIndex]
+        fireShape.remove((x+1, y))
+        fireShape.remove((x, y+1))
+        fireShape.remove((x+1, y+1))
+
+        fireIndex += 1
+
+    fireShape = compFireShape
 
 def drawFire():
     global fire, firePalette, br, fireDir
@@ -195,11 +210,37 @@ def drawFire():
         br = 0
         fireDir *= -1
 
+def generateFire():
+    global fire, firePalette, br, fireDir
+
+    if len(fire) <= 0:
+        return
+
+    for pixel in fireShape:
+        cindex = random.randint(1, len(firePalette) - 1)
+        c = firePalette[cindex]
+        (x, y) = pixel
+        bfactor = br / 255.0
+        matrix.set_rgb(x, y, int(bfactor*c[0]), int(bfactor*c[1]), int(bfactor*c[2]))
+        matrix.set_rgb(x + 1, y, int(bfactor*c[0]), int(bfactor*c[1]), int(bfactor*c[2]))
+        matrix.set_rgb(x, y + 1, int(bfactor*c[0]), int(bfactor*c[1]), int(bfactor*c[2]))
+        matrix.set_rgb(x + 1, y + 1, int(bfactor*c[0]), int(bfactor*c[1]), int(bfactor*c[2]))
+
+    # br += FIRE_INC * fireDir
+    # if br >= 255:
+    #     br = 255
+    #     fireDir *= -1
+    # elif br <= 0:
+    #     br = 0
+    #     fireDir *= -1
+
+
 def setup():
     global ani, currLine, pixelStart
     #loads color palette and frame count from file
     loadFurnace(FURNACE_FILE)
     loadFire(FIRE_FILE)
+    compressFireShape()
 
 def drawFrame(flines):
     global palette, frame, frameCount, currLine, pixelStart
@@ -245,10 +286,11 @@ setup()
 while True:
     #apparent fire brightness is 0
     if br == FIRE_INC and fireDir == 1: 
-        time.sleep(REST / 1000)
+        time.sleep(REST / 1000.0)
 
     if br == 255 - FIRE_INC and fireDir == -1: 
-        time.sleep(REST / 1000 / 2)
+        time.sleep(REST / 1000.0 / 2)
 
-    drawFire()
+    generateFire()
     matrix.flip()
+    time.sleep(750 / 1000.0)
