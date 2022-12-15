@@ -1,5 +1,4 @@
 import time, random, math
-import json
 
 ################
 #MATRIX VARS
@@ -24,10 +23,12 @@ firePalette = []
 fireShape = []
 fire = {}
 
-br = 255
+br = 0
 fireDir = 1
 FIRE_INC = 255 / 5
-REST = 1000
+
+LIT_REST = 2000
+DIM_REST = 1000
 
 furnacePalette = []
 furnace = {}
@@ -103,10 +104,6 @@ def loadFurnace(filename):
                 line = line.split(' ')
                 y = int(line[0])
                 c = furnacePalette[int(line[1])]
-
-                #DEPR: store pixel
-                # fkey = str(x) + " " + str(y)
-                # furnace[fkey] = c
 
                 #draw pixel
                 matrix.set_rgb(x, y, c[0], c[1], c[2])
@@ -200,7 +197,6 @@ def drawFire():
         x, y = pixel.strip().split(" ")
         bfactor = br / 255.0
         matrix.set_rgb(int(x), int(y), int(bfactor*c[0]), int(bfactor*c[1]), int(bfactor*c[2]))
-        #matrix.set_rgb(int(x), int(y), int(c[0]), int(c[1]), int(c[2]))
 
     br += FIRE_INC * fireDir
     if br >= 255:
@@ -217,7 +213,8 @@ def generateFire():
         return
 
     for pixel in fireShape:
-        cindex = random.randint(1, len(firePalette) - 1)
+        #cindex = random.randint(1, len(firePalette) - 1)
+        cindex = weightedRandom([3, 5, 0, 2]) + 1
         c = firePalette[cindex]
         (x, y) = pixel
         bfactor = br / 255.0
@@ -235,47 +232,20 @@ def generateFire():
     #     fireDir *= -1
 
 
+def weightedRandom(weights):
+    arr = []
+    for wi in range(len(weights)):
+        for _ in range(weights[wi]):
+            arr.append(wi)
+    
+    return arr[random.randint(0, len(arr) - 1)]
+
 def setup():
     global ani, currLine, pixelStart
     #loads color palette and frame count from file
     loadFurnace(FURNACE_FILE)
     loadFire(FIRE_FILE)
     compressFireShape()
-
-def drawFrame(flines):
-    global palette, frame, frameCount, currLine, pixelStart
-
-    #reset animation
-    if frame == 0:
-        currLine = pixelStart
-
-    line = flines[currLine].strip()
-    while line != "F":
-        x = int(line)
-        y = -1
-        
-        currLine += 1
-        line = flines[currLine].strip()
-        while line != "X":
-            line = line.split(' ')
-            y = int(line[0])
-            c = palette[int(line[1])]
-
-            #draw pixel
-            matrix.set_rgb(x, y, c[0], c[1], c[2])
-
-            #increment line
-            currLine += 1
-            line = flines[currLine].strip()
-
-        currLine += 1
-        line = flines[currLine].strip()
-
-    currLine += 1
-    frame = (frame + 1) % frameCount
-
-
-
 
 ##############
 # MAIN LOOP
@@ -286,11 +256,10 @@ setup()
 while True:
     #apparent fire brightness is 0
     if br == FIRE_INC and fireDir == 1: 
-        time.sleep(REST / 1000.0)
+        time.sleep(DIM_REST / 1000.0)
 
     if br == 255 - FIRE_INC and fireDir == -1: 
-        time.sleep(REST / 1000.0 / 2)
+        time.sleep(LIT_REST / 1000.0)
 
-    generateFire()
+    drawFire()
     matrix.flip()
-    time.sleep(750 / 1000.0)
