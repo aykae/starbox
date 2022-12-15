@@ -25,7 +25,8 @@ fire = {}
 
 br = 255
 fireDir = 1
-FIRE_INC = 80
+FIRE_INC = 255 / 5
+REST = 1000
 
 furnacePalette = []
 furnace = {}
@@ -242,6 +243,12 @@ matrix.start()
 
 setup()
 while True:
+    #apparent fire brightness is 0
+    if br == FIRE_INC and fireDir == 1: 
+        time.sleep(REST / 1000)
+
+    if br == 255 - FIRE_INC and fireDir == -1: 
+        time.sleep(REST / 1000 / 2)
+
     drawFire()
     matrix.flip()
-    #time.sleep(REFRESH / 1000.0)

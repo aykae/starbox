@@ -4,8 +4,8 @@ import os
 # INPUT = "final/stills/furnace.bmp"
 # OUTPUT = "data/furnace.txt"
 
-INPUT = "final/stills/fire.bmp"
-OUTPUT = "data/fire.txt"
+INPUT = "final/stills/furnace2.bmp"
+OUTPUT = "data/furnace2.txt"
 
 BLACK = (0, 0, 0)
 
