@@ -13,7 +13,7 @@ HEIGHT = 32
 REFRESH = 20
 
 # FILES
-FORE_FILE = "logo.txt"
+IMG_FILE = "img.txt"
 
 #
 palette = []
@@ -104,10 +104,10 @@ def weightedRandom(weights):
 def setup():
     global ani, currLine, pixelStart
     #loads color palette and frame count from file
-    loadLogo(FORE_FILE)
+    load(IMG_FILE)
 
 def loop():
-    drawLogo()
+    draw()
 
 ##############
 # MAIN LOOP

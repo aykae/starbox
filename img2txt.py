@@ -4,8 +4,8 @@ import os
 # INPUT = "final/stills/furnace.bmp"
 # OUTPUT = "data/furnace.txt"
 
-INPUT = "final/stills/furnace2.bmp"
-OUTPUT = "data/furnace2.txt"
+INPUT = "creeperbox/studio/tntbmp.bmp"
+OUTPUT = "creeperbox/final/tnt.txt"
 
 BLACK = (0, 0, 0)
 
